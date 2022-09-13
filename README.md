@@ -1,6 +1,9 @@
 # METR4202 REPO
 
-## REMINDER: Do not commit to main for now, please commit to your branch
+## REMINDERS: 
+Do not commit to main for now, please commit to your branch
+
+Keep commits when merging after pull request
 
 ### Branch names: controller, inverse_kinematics, forward_kinematics, camera, gripper
 
