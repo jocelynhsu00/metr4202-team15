@@ -2,9 +2,9 @@
 
 ## REMINDER: Do not commit to main for now, please commit to your branch
 
-Branch names: controller, inverse_kinematics, forward_kinematics, camera, gripper
+### Branch names: controller, inverse_kinematics, forward_kinematics, camera, gripper
 
-Git commands:
+### Git commands:
 
 git checkout <insert branch name>
 
