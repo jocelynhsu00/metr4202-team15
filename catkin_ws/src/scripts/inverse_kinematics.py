@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> Added ros
->>>>>>> 59eaa03 (Added ros)
 #!/usr/bin/env python3
 """
 Inverse kinematics
@@ -32,7 +25,7 @@ def joint_states(end_eff: list) -> JointState:
 
     Parameters:
         end_eff (array): the end effector position in the form a transformation matrix [x, y, z]
-        link_lengths(list): the link lengths of the robot in the form of [l1, l2, l3, l4] TODO: hard code these in
+        link_lengths(list): the link lengths of the robot in the form of [l1, l2, l3, l4]
 
     Returns:
         (list, list): the two options for the robot joint angles
@@ -71,12 +64,11 @@ def joint_states(end_eff: list) -> JointState:
     theta_2a = np.arctan2(px, pz) - np.arctan2(l2 + l3 * np.cos(theta_3a), l3 * np.sin(theta_3a))
     theta_4a = phi - (theta_2a + theta_3a)
 
-<<<<<<< HEAD
-
-=======
->>>>>>> Added ros
     # TODO: Check if theta 4 is valid, change phi if not
 
+    # Check if theta 4 is valid, change phi if not
+
+    joint_angles_1 = [theta_1a, theta_2a, theta_3a, theta_4a]
 
     # Second solution
     theta_1b = np.arctan2(py, px)
@@ -85,11 +77,8 @@ def joint_states(end_eff: list) -> JointState:
     theta_4b = phi - (theta_2b + theta_3b)
 
     # TODO: Check if theta 4 is valid, change phi if not
-<<<<<<< HEAD
-=======
 
     # TODO: LOGIC TO CHOOSE JOINT ANGLES
->>>>>>> Added ros
     msg.position = [
         theta_1a,
         theta_2a,
@@ -121,18 +110,7 @@ def main():
     # You spin me right round baby, right round...
     # Just stops Python from exiting and executes callbacks
     rospy.spin()
-<<<<<<< HEAD
 
 
 if __name__ == '__main__':
     main()
-<<<<<<< HEAD
-=======
-    # Check if theta 4 is valid, change phi if not
-=======
->>>>>>> Added ros
-
-
-if __name__ == '__main__':
-    main()
->>>>>>> 59eaa03 (Added ros)
