@@ -109,7 +109,5 @@ def main():
     # Just stops Python from exiting and executes callbacks
     rospy.spin()
 
-
-
 if __name__ == '__main__':
     main()
