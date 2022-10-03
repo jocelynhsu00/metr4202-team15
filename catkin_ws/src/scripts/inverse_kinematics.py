@@ -25,7 +25,7 @@ def joint_states(end_eff: list) -> JointState:
 
     Parameters:
         end_eff (array): the end effector position in the form a transformation matrix [x, y, z]
-        link_lengths(list): the link lengths of the robot in the form of [l1, l2, l3, l4]
+        link_lengths(list): the link lengths of the robot in the form of [l1, l2, l3, l4] TODO: hard code these in
 
     Returns:
         (list, list): the two options for the robot joint angles
@@ -67,9 +67,7 @@ def joint_states(end_eff: list) -> JointState:
     # TODO: Check if theta 4 is valid, change phi if not
 
     # Check if theta 4 is valid, change phi if not
-
-    joint_angles_1 = [theta_1a, theta_2a, theta_3a, theta_4a]
-
+    
     # Second solution
     theta_1b = np.arctan2(py, px)
     theta_3b = np.arctan2(c_theta_3, - np.sqrt(1 - c_theta_3 ** 2))
