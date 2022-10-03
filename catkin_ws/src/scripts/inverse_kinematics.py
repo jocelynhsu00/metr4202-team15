@@ -74,8 +74,6 @@ def joint_states(end_eff: list) -> JointState:
     theta_4b = phi - (theta_2b + theta_3b)
 
     # TODO: Check if theta 4 is valid, change phi if not
-
-    # TODO: LOGIC TO CHOOSE JOINT ANGLES
     msg.position = [
         theta_1a,
         theta_2a,
