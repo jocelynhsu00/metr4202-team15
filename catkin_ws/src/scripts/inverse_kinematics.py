@@ -63,7 +63,6 @@ def joint_states(end_eff: list) -> JointState:
     theta_3a = np.arctan2(c_theta_3, np.sqrt(1 - c_theta_3 ** 2))
     theta_2a = np.arctan2(px, pz) - np.arctan2(l2 + l3 * np.cos(theta_3a), l3 * np.sin(theta_3a))
     theta_4a = phi - (theta_2a + theta_3a)
-
     # TODO: Check if theta 4 is valid, change phi if not
 
     # Check if theta 4 is valid, change phi if not
