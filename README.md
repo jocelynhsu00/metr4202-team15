@@ -23,7 +23,7 @@ Keep commits when merging after pull request
 
 ### Git commands:
 
-git checkout <insert branch name>
+git checkout "<insert branch name>"
 
 git clone <insert link>: to clone a repo 
 
