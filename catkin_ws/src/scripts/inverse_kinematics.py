@@ -1,7 +1,10 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> Added ros
+=======
+>>>>>>> c2e12c559d2da1c556e5450d7e6309b3ca08431e
 #!/usr/bin/env python3
 """
 Inverse kinematics
@@ -67,9 +70,12 @@ def joint_states(end_eff: list, link_lengths:list) -> JointState:
     theta_4a = phi - (theta_2a + theta_3a)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> Added ros
+=======
+>>>>>>> c2e12c559d2da1c556e5450d7e6309b3ca08431e
     # TODO: Check if theta 4 is valid, change phi if not
 
 
@@ -81,10 +87,15 @@ def joint_states(end_eff: list, link_lengths:list) -> JointState:
 
     # TODO: Check if theta 4 is valid, change phi if not
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
     # TODO: LOGIC TO CHOOSE JOINT ANGLES
 >>>>>>> Added ros
+=======
+
+    # TODO: LOGIC TO CHOOSE JOINT ANGLES
+>>>>>>> c2e12c559d2da1c556e5450d7e6309b3ca08431e
     msg.position = [
         theta_1a,
         theta_2a,
@@ -117,6 +128,7 @@ def main():
     # Just stops Python from exiting and executes callbacks
     rospy.spin()
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 
 if __name__ == '__main__':
@@ -124,6 +136,8 @@ if __name__ == '__main__':
     # Check if theta 4 is valid, change phi if not
 =======
 >>>>>>> Added ros
+=======
+>>>>>>> c2e12c559d2da1c556e5450d7e6309b3ca08431e
 
 
 if __name__ == '__main__':
