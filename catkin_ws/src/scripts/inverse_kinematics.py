@@ -18,7 +18,7 @@ def inverse_kinematics(end_eff, link_lengths) -> JointState:
     pub.publish(joint_states(end_eff, link_lengths))
 
 
-def joint_states(end_eff: list, link_lengths:list) -> JointState:
+def joint_states(end_eff: list) -> JointState:
     """
     Calculates the joint angles of the robot given the position and orientation 
     of the end effector
@@ -47,12 +47,14 @@ def joint_states(end_eff: list, link_lengths:list) -> JointState:
     py = end_eff[1]
     pz = end_eff[2]
 
-    phi = np.pi / 2 # Can be 0 or 90
+    phi = np.pi / 2 # Can be 0 or 90, use 90 for now
 
-    l1 = link_lengths[0]
-    l2 = link_lengths[1]
-    l3 = link_lengths[2]
-    l4 = link_lengths[3]
+    # mm link lengths (from cad)
+
+    l1 = 55.62 # link_length[0]
+    l2 = 117.5 #link_lengths[1]
+    l3 = 95 #link_lengths[2]
+    l4 = 98.19 #link_lengths[3]
 
     c_theta_3 = (px ** 2 + py ** 2 - l2 ** 2 - l3 ** 2) / (2 * l2 * l3)
 
