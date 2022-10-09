@@ -16,23 +16,7 @@ from geometry_msgs.msg import Pose
 def inverse_kinematics(end_eff: list, pose: Pose) -> JointState:
     global pub 
 
-    rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
-    pub.publish(joint_states(end_eff))
-
-
-def joint_states(end_eff: list) -> JointState:
-    """
-    Calculates the joint angles of the robot given the position and orientation 
-    of the end effector
-
-    Parameters:
-        end_eff (array): the end effector position in the form a transformation matrix [x, y, z]
-        link_lengths(list): the link lengths of the robot in the form of [l1, l2, l3, l4] TODO: hard code these in
-
-    Returns:
-        (list, list): the two options for the robot joint angles
-
-    """
+    # INVERSE KINEMATICS
     # Create message of type JointState
     msg = JointState(
         # Set header with current time
@@ -86,7 +70,9 @@ def joint_states(end_eff: list) -> JointState:
         theta_4
     ]
 
-    return msg
+    rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
+    pub.publish(msg)
+
 
 def main():
     global pub
