@@ -13,9 +13,11 @@ from std_msgs.msg import Header
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Pose
 
-def inverse_kinematics(end_eff, link_lengths) -> JointState:
+def inverse_kinematics(end_eff: list, pose: Pose) -> JointState:
+    global pub 
+
     rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
-    pub.publish(joint_states(end_eff, link_lengths))
+    pub.publish(joint_states(end_eff))
 
 
 def joint_states(end_eff: list) -> JointState:
@@ -48,10 +50,10 @@ def joint_states(end_eff: list) -> JointState:
 
     # mm link lengths (from cad)
 
-    l1 = 55.62 # link_length[0]
+    l1 = 53.390 # link_length[0]
     l2 = 117.5 #link_lengths[1]
     l3 = 95 #link_lengths[2]
-    l4 = 98.19 #link_lengths[3]
+    l4 = 85 #link_lengths[3]
 
     c_theta_3 = (px ** 2 + py ** 2 - l2 ** 2 - l3 ** 2) / (2 * l2 * l3)
 
@@ -95,11 +97,14 @@ def main():
         queue_size=10 # Topic size (optional)
     )
 
+    # TODO: pass in as argument
+    end_eff = [140,70,50]
+
     # Create subscriber
     sub = rospy.Subscriber(
         'desired_pose', # Topic name
         Pose, # Message type
-        inverse_kinematics # Callback function (required)
+        inverse_kinematics(end_eff) # Callback function (required)
     )
 
     # Initialise node with any node name
