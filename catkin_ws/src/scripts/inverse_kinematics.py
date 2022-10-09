@@ -38,11 +38,8 @@ def joint_states(end_eff: list) -> JointState:
         # Specify joint names (see `controller_config.yaml` under `dynamixel_interface/config`)
         name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
     )
-
-    # 2 solutions available
-    joint_angles_1 = []
-    joint_angles_2 = []
-
+    
+    # End eff posiiton
     px = end_eff[0]
     py = end_eff[1]
     pz = end_eff[2]
@@ -59,28 +56,32 @@ def joint_states(end_eff: list) -> JointState:
     c_theta_3 = (px ** 2 + py ** 2 - l2 ** 2 - l3 ** 2) / (2 * l2 * l3)
 
     # First solution
-    theta_1a = np.arctan2(py, px)
-    theta_3a = np.arctan2(c_theta_3, np.sqrt(1 - c_theta_3 ** 2))
-    theta_2a = np.arctan2(px, pz) - np.arctan2(l2 + l3 * np.cos(theta_3a), l3 * np.sin(theta_3a))
-    theta_4a = phi - (theta_2a + theta_3a)
-    # TODO: Check if theta 4 is valid, change phi if not
+    theta_1 = np.arctan2(py, px)
+    theta_3 = np.arctan2(c_theta_3, np.sqrt(1 - c_theta_3 ** 2))
+    theta_2 = np.arctan2(px, pz) - np.arctan2(l2 + l3 * np.cos(theta_3), l3 * np.sin(theta_3))
+    theta_4 = phi - (theta_2 + theta_3)
 
-    # Check if theta 4 is valid, change phi if not
+    # Collision detection (ensure all theta values between -pi/2 and pi/2)
+    for theta in [theta_1, theta_2, theta_3]:
+        # If any values result in collision, use second solution
+        if not (-1.5 < theta < 1.5):
+            theta_1 = np.arctan2(py, px)
+            theta_3 = np.arctan2(c_theta_3, - np.sqrt(1 - c_theta_3 ** 2))
+            theta_2 = np.arctan2(px, pz) - np.arctan2(l2 + l3 * np.cos(theta_3), l3 * np.sin(theta_3))
+            theta_4 = phi - (theta_2 + theta_3)
+            break
 
-    # TODO: Check if theta 4 is valid, change phi if not
+   # Check if theta 4 is valid, change phi if not (alternates between 0 and 90, can set to arbitrary value later)
+    if not (-1.5 < theta_4 < 1.5):
+        phi = 0
+        theta_4 = phi - (theta_2 + theta_3)
 
-    # Second solution
-    theta_1b = np.arctan2(py, px)
-    theta_3b = np.arctan2(c_theta_3, - np.sqrt(1 - c_theta_3 ** 2))
-    theta_2b = np.arctan2(px, pz) - np.arctan2(l2 + l3 * np.cos(theta_3b), l3 * np.sin(theta_3b))
-    theta_4b = phi - (theta_2b + theta_3b)
-
-    # TODO: Check if theta 4 is valid, change phi if not
+ 
     msg.position = [
-        theta_1a,
-        theta_2a,
-        theta_3a,
-        theta_4a
+        theta_1,
+        theta_2,
+        theta_3,
+        theta_4
     ]
 
     return msg
