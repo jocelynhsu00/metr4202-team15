@@ -16,7 +16,13 @@ from geometry_msgs.msg import Pose
 def inverse_kinematics(pose: Pose) -> JointState:
     global pub 
 
-    # INVERSE KINEMATICS
+    # INVERSE KINEMATIC
+
+    # Create flag for if a valid solution exists
+    valid_sol = False
+
+    used_second_sol = False
+
     # Create message of type JointState
     msg = JointState(
         # Set header with current time
@@ -47,16 +53,22 @@ def inverse_kinematics(pose: Pose) -> JointState:
     theta_2 = np.arctan2(px, pz) - np.arctan2(l2 + l3 * np.cos(theta_3), l3 * np.sin(theta_3))
     theta_4 = phi - (theta_2 + theta_3)
 
+    # Check if theta 4 is valid, change phi if not (alternates between 0 and 90, can set to arbitrary value later)
+    if theta_4 < -1.5 or theta_4 > 1.5:
+        phi = 0
+        theta_4 = phi - (theta_2 + theta_3)
+
     # Collision detection (ensure all theta values between -pi/2 and pi/2)
-    for theta in [theta_1, theta_2, theta_3]:
+    for theta in [theta_1, theta_2, theta_3, theta_4]:
         # If any values result in collision, use second solution
-        if not (-1.5 < theta < 1.5):
+        if theta < -1.5 or theta > 1.5:
             theta_1 = np.arctan2(py, px)
             theta_3 = np.arctan2(c_theta_3, - np.sqrt(1 - c_theta_3 ** 2))
             theta_2 = np.arctan2(px, pz) - np.arctan2(l2 + l3 * np.cos(theta_3), l3 * np.sin(theta_3))
             theta_4 = phi - (theta_2 + theta_3)
+            used_second_sol = True
             break
-
+    
    # Check if theta 4 is valid, change phi if not (alternates between 0 and 90, can set to arbitrary value later)
     if not (-1.5 < theta_4 < 1.5):
         phi = 0
