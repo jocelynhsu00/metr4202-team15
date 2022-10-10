@@ -39,7 +39,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
     alpha = np.pi / 2 # Gripper always angled at 90 deg to ground, can be changed if needed
 
     # mm link lengths (from cad)
-    l1 = 54 # link_length[0]
+    l1 = 75 # link_length[0]
     l2 = 117.5 #link_lengths[1]
     l3 = 95 #link_lengths[2]
     l4 = 85 #link_lengths[3]
@@ -88,6 +88,10 @@ def inverse_kinematics(pose: Pose) -> JointState:
             theta_2 = np.arctan2(py_3, px_3) - np.arctan2(l2 + l3 * np.cos(theta_3), l3 * np.sin(theta_3))
             theta_4 = alpha - (theta_2 + theta_3)
 
+            # Convert angles for input to dynamixels
+            theta_2 = (np.pi/2) - theta_2
+            theta_3 = -theta_3
+
             # Update theta list
             theta_list = theta_list = [theta_1, theta_2, theta_3, theta_4]
             break
@@ -105,7 +109,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
                 msg.position = [
                     0,
                     0,
-                    1.5,
+                    1,
                     0
                 ]
                 break
@@ -118,7 +122,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
             theta_3,
             theta_4
         ]
-        
+
     rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
     pub.publish(msg)
 
