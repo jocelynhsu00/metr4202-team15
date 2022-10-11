@@ -9,14 +9,14 @@ rpi = pigpio.pi()
 rpi.set_mode(18, pigpio.OUTPUT)
 
 class Block:
-    def __init__(self, x, y, z, theta):
+    def __init__(self, x, y, z):
         self.x = x 
         self.y = y
         self.z = z
         self.theta = self.get_theta()
         self.r = np.sqrt((self.x-centre_x)^2+(self.y-centre_y)^2)
 
-    def update_Pos(self, x, y, z, theta):
+    def update_Pos(self, x, y, z):
         #Update a block opjects current position.
         #maybe update r. 
         self.x = x
@@ -98,7 +98,22 @@ def grip_box():
 
 #def ready position 
 
-#def grab box 
+#def grab_box(block) 
+    
+    #start at ready pos 
+    #block predict pos 
+
+    #move to predicted pos 
+
+    #maybe wait for box to move underneath
+
+    #move down 
+    #grip_box()
+    #move up
+    #move to dropoff zone
+    #grip_open()
+    #reset to ready position 
+    
 
 #def find dropoff zone 
 
