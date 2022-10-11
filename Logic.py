@@ -6,7 +6,7 @@ centre_y = 0
 
 
 class Block:
-    def __init__(self, x, y, z, theta)
+    def __init__(self, x, y, z, theta):
         self.x = x 
         self.y = y
         self.z = z
