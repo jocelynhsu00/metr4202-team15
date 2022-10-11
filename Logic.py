@@ -58,6 +58,7 @@ class Block:
         pred_theta = self.theta+self.omega*3
         pred_y = np.arcsin(pred_theta)*self.r
         pred_x = np.arccos(pred_theta)*self.r
+        return pred_x, pred_y
         
         
 def block_distance(b1,b2):
