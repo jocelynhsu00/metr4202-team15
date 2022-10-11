@@ -96,5 +96,13 @@ def grip_box():
     return 0
 
 
+#def ready position 
+
+#def grab box 
+
+#def find dropoff zone 
+
+
+
 
 
