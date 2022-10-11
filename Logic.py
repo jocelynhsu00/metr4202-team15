@@ -1,9 +1,12 @@
 #includes stuff
 import numpy as np
 import time
+import pigpio 
 centre_x = 0
 centre_y = 0
 
+rpi = pigpio.pi()
+rpi.set_mode(18, pigpio.OUTPUT)
 
 class Block:
     def __init__(self, x, y, z, theta):
@@ -71,6 +74,17 @@ def transform(x, y, z, theta):
 
 # copy gripper code 
 
+def grip_close():
+    rpi.set_servo_pulsewidth(18, 1000)
+    return 0
+
+def grip_open():
+    rpi.set_servo_pulsewidth(18, 2000)
+    return 0
+
+def grip_box():
+    rpi.set_servo_pulsewidth(18, 1500)
+    return 0
 
 
 
