@@ -7,41 +7,45 @@ centre_y = 0
 
 class Block:
     def __init__(self, x, y, z, theta)
-    self.x = x 
-    self.y = y
-    self.z = z
-    self.theta = theta
-    self.r = np.sqrt((self.x-centre_x)^2+(self.y-centre_y)^2)
+        self.x = x 
+        self.y = y
+        self.z = z
+        self.theta = theta
+        self.r = np.sqrt((self.x-centre_x)^2+(self.y-centre_y)^2)
 
     def update_Pos(self, x, y, z, theta):
         #Update a block opjects current position.
         #maybe update r. 
+        self.x = x
+        self.y = y
+        self.z = z 
+        self.theta = self.get_theta
         return 0 
 
     def get_Pos(self):
         # Get blocks current position.
-        return 0 
+        return self.x, self.y, self.z
     
-    def get_theta(self, x, y, z):
+    def get_theta(self):
         #Calculating theta for the block, starting on the right and going around counterclockwise
         phi = np.absolute(np.arctan((self.y-centre_y)/(self.x-centre_x)))
         if self.x > centre_x:
             if self.y > centre_y:
                 theta = phi
-            else if self.y < centre_y:
+            elif self.y < centre_y:
                 theta = 2*np.pi - phi
-        else if self.x < centre_x:
+        elif self.x < centre_x:
             if self.y > centre_y:
                 theta = np.pi - phi
-            else if self.y < centre_y:
+            elif self.y < centre_y:
                 theta = np.pi + phi
         return theta
     
     def get_omega(self):
         #uses two thetas to find the angular velocity of the cube
-        theta1 = get_theta
+        theta1 = self.get_theta()
         time.sleep(3)
-        theta2 = get_theta
+        theta2 = self.get_theta()
         delta_theta = theta2 - theta1
         omega = delta_theta/3
         return omega
