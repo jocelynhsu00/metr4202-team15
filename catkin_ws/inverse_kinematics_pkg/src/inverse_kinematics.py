@@ -26,13 +26,24 @@ def inverse_kinematics(pose: Pose) -> JointState:
         name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
     )
     
+    # msg.position = [
+    #     -np.deg2rad(30),
+    #     np.deg2rad(30),
+    #     np.deg2rad(30),
+    #     -np.deg2rad(30)
+    # ]
+    # rospy.loginfo('Test 30 deg')
+    # pub.publish(msg)
     # End eff posiiton
     px_end = pose.position.x #end_eff[0]
     py_end = pose.position.y #end_eff[1]
     pz_end = pose.position.z #nd_eff[2]
 
+    print(px_end, py_end, pz_end)
+
     # Ensure no division by 0
     if px_end != 0 and py_end != 0:
+        print('non-zero end eff')
 
         psi = - np.pi / 2 # Gripper always angled at - 90 deg relative to ground, can be changed if needed
 
@@ -52,22 +63,25 @@ def inverse_kinematics(pose: Pose) -> JointState:
         theta_2 = np.arctan(pz_4/px_4) - np.arctan((l3*np.sin(theta_3))/(l2+l3*np.cos(theta_3)))
 
         # Update angles for elbow up solution
-        theta_3 = - theta_3
+        # theta_3 = - theta_3
         theta_2 = np.pi/2 - theta_2
 
         theta_4 = psi - (theta_2 + theta_3)
+        # theta_4 = - theta_4
 
         theta_1 = np.arctan(py_end/px_end)
+        theta_1 = - theta_1
 
         # Check limits
         theta_list = [theta_1, theta_2, theta_3, theta_4]
+        print(theta_list)
 
         # Assume all valid
         all_valid = True
 
         for theta in theta_list:
             # Check for invalid
-            if theta < -1.5 or theta > 1.5:
+            if theta <= -1.5 or theta >= 1.5:
                 # Invalid
                 all_valid = False
                 break
@@ -75,16 +89,17 @@ def inverse_kinematics(pose: Pose) -> JointState:
         # Only publish if angles are valid
         if all_valid:
             msg.position = theta_list
+            print("VALID:", theta_list)
             rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
             pub.publish(msg)
         else:
             msg.position = [0, 0, 0, 0]
-            rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
+            rospy.loginfo('use 0 config')
             pub.publish(msg)
 
     else:
         msg.position = [0, 0, 0, 0]
-        rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
+        rospy.loginfo('use 0 config')
         pub.publish(msg)
 
 
