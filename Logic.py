@@ -10,7 +10,7 @@ class Block:
         self.x = x 
         self.y = y
         self.z = z
-        self.theta = theta
+        self.theta = self.get_theta()
         self.r = np.sqrt((self.x-centre_x)^2+(self.y-centre_y)^2)
 
     def update_Pos(self, x, y, z, theta):
@@ -19,7 +19,8 @@ class Block:
         self.x = x
         self.y = y
         self.z = z 
-        self.theta = self.get_theta
+        self.theta = self.get_theta()
+        self.r = np.sqrt((self.x-centre_x)^2+(self.y-centre_y)^2)
         return 0 
 
     def get_Pos(self):
@@ -49,6 +50,11 @@ class Block:
         delta_theta = theta2 - theta1
         omega = delta_theta/3
         return omega
+    
+    def predict_pos(self):
+        pred_theta = self.theta+self.omega*3
+        pred_y = np.arcsin(pred_theta)*self.r
+        pred_x = np.arccos(pred_theta)*self.r
         
         
 
