@@ -35,7 +35,8 @@ def inverse_kinematics(pose: Pose) -> JointState:
 
     # End eff posiiton
     x_end = pose.position.x 
-    y_end = pose.position.y - l1
+    x_end_abs = abs(pose.position.x)
+    y_end = pose.position.y- l1
     z_end = pose.position.z 
 
     # mm link lengths (from cad)
@@ -55,18 +56,18 @@ def inverse_kinematics(pose: Pose) -> JointState:
 
     gripper_0_valid = False
 
-    if x_end < max_length_gripper_0:
+    if x_end_abs < max_length_gripper_0:
         gripper_0_valid = True
 
-    if x_end < max_length_gripper_90:
+    if x_end_abs < max_length_gripper_90:
         gripper_90_valid = True
 
     # Try gripper 90 deg sln first
     if gripper_90_valid:
-        psi = -np.pi/2
+        psi = np.pi/2
 
         # Find pos at dynamixel 4
-        x_4 = x_end
+        x_4 = x_end_abs
         y_4 = y_end + l4
         z_4 = z_end
 
@@ -79,18 +80,39 @@ def inverse_kinematics(pose: Pose) -> JointState:
 
         # Convert to dynamixel input TODO: check if any of the dynamixel values need to be negated/flipped (so far seems like 4 needs to be)
         theta_3 = -theta_3
+
         theta_2 = np.pi/2 - theta_2
-        theta_4 = - theta_4
+        if x_4 < 0:
+            theta_2 = - theta_2
+        
+        # Negating
+        theta_4 = -theta_4
+        theta_3 = -theta_3
+        theta_2 = -theta_2
+        theta_1 = -theta_1
+
+        # Negate if -ve x
+        if x_end < 0:
+            # Negating
+            theta_4 = -theta_4
+            theta_3 = -theta_3
+            theta_2 = -theta_2
+
 
         theta_list  = [theta_1, theta_2, theta_3, theta_4]
         # Check limits
         # TODO: COLLISION AVOIDANCE
         all_valid = True
-        for theta in theta_list:
+        for index, theta in enumerate(theta_list):
             # Check dynamixel limits (want to avoid going over -90, 90 deg as it damages the wiring)
-            if theta < -np.deg2rad(110) or theta > np.deg2rad(110) or math.isnan(theta):
-                all_valid = False
-                break
+            if index != 3:
+                if theta < -np.deg2rad(140) or theta > np.deg2rad(140) or math.isnan(theta):
+                    all_valid = False
+                    break
+            else:
+                if theta < -np.deg2rad(110) or theta > np.deg2rad(110) or math.isnan(theta):
+                    all_valid = False
+                    break
         
         if all_valid:
             msg.position = theta_list
@@ -100,13 +122,17 @@ def inverse_kinematics(pose: Pose) -> JointState:
             psi = 0
 
             # Find pos at dynamixel 4
-            x_4 = x_end - l4
+            x_4 = x_end_abs - l4
             y_4 = y_end
             z_4 = z_end
 
             # Elbow up
             c_theta_3 = (x_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
-            theta_3 = np.arctan2(-np.sqrt(1-c_theta_3), c_theta_3)
+            # IF x is negative, elbow up is +ve sln rather than negative
+            if x_4 < 0:
+                theta_3 = np.arctan2(np.sqrt(1-c_theta_3), c_theta_3)
+            elif x_4 > 0:
+                theta_3 = np.arctan2(-np.sqrt(1-c_theta_3), c_theta_3)
             theta_2 = np.arctan2(y_4, x_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
             theta_4 = -psi - theta_2 - theta_3
             theta_1 = np.arctan(z_4/x_4)
@@ -114,24 +140,50 @@ def inverse_kinematics(pose: Pose) -> JointState:
             # Convert to dynamixel input TODO: check if any of the dynamixel values need to be negated/flipped (so far seems like 4 needs to be)
             theta_3 = -theta_3
             theta_2 = np.pi/2 - theta_2
-            theta_4 = - theta_4
+            if x_4 < 0:
+                theta_2 = - theta_2
+
+            # Negating
+            theta_4 = -theta_4
+            theta_3 = -theta_3
+            theta_2 = -theta_2
+            theta_1 = -theta_1
+
+            # Negate if -ve x
+            if x_end < 0:
+                # Negating
+                theta_4 = -theta_4
+                theta_3 = -theta_3
+                theta_2 = -theta_2
 
             theta_list  = [theta_1, theta_2, theta_3, theta_4]
             # Check limits
             # TODO: COLLISION AVOIDANCE
             all_valid = True
-            for theta in theta_list:
+            for index, theta in enumerate(theta_list):
                 # Check dynamixel limits (want to avoid going over -90, 90 deg as it damages the wiring)
-                if theta < -np.deg2rad(110) or theta > np.deg2rad(110) or math.isnan(theta):
-                    all_valid = False
-                    # This means both sln are invalid: return to zero config
-                    msg.position = [0, 0, 0, 0]
-                    print('No valid sln, return to zero config')
-                    break
+                if index != 3:
+                    if theta < -np.deg2rad(140) or theta > np.deg2rad(140) or math.isnan(theta):
+                        all_valid = False
+                        # This means both sln are invalid: return to zero config
+                        msg.position = [0, 0, 0, 0]
+                        print('No valid sln, return to zero config')
+                        break
+                else:
+                    if theta < -np.deg2rad(110) or theta > np.deg2rad(110) or math.isnan(theta):
+                        all_valid = False
+                        # This means both sln are invalid: return to zero config
+                        msg.position = [0, 0, 0, 0]
+                        print('No valid sln, return to zero config')
+                        break
             
             if all_valid:
                 msg.position = theta_list
 
+        deg = []
+        for theta in theta_list:
+            deg.append(np.rad2deg(theta))
+        print(deg)
         rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
         pub.publish(msg)
 
