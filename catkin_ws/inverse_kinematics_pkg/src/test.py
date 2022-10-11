@@ -62,7 +62,7 @@ def inverse_kinematics(x, y, z):
         all_valid = True
         for theta in theta_list:
             # Check dynamixel limits (want to avoid going over -90, 90 deg as it damages the wiring)
-            if theta < - np.pi or theta > np.pi or math.isnan(theta):
+            if theta < - np.pi/2 or theta > np.pi/2 or math.isnan(theta):
                 all_valid = False
                 break
         
@@ -78,7 +78,7 @@ def inverse_kinematics(x, y, z):
 
             # Find pos at dynamixel 4
             x_4 = x_end - l4
-            y_4 = y_end
+            y_4 = y_end 
             z_4 = z_end
 
             # Elbow up
@@ -99,7 +99,7 @@ def inverse_kinematics(x, y, z):
             all_valid = True
             for theta in theta_list:
                 # Check dynamixel limits (want to avoid going over -90, 90 deg as it damages the wiring)
-                if theta < - np.pi or theta > np.pi or math.isnan(theta):
+                if theta < - np.pi/2 or theta > np.pi/2 or math.isnan(theta):
                     all_valid = False
                     # This means both sln are invalid: return to zero config
                     return [0, 0, 0, 0]
@@ -111,9 +111,8 @@ def inverse_kinematics(x, y, z):
                 return degs
 
 
-
 def main():
-    print(inverse_kinematics(150, 150, 150))
+    print(inverse_kinematics(100, 50, 0))
 
 if __name__ == '__main__':
     main()

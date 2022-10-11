@@ -82,7 +82,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
         all_valid = True
         for theta in theta_list:
             # Check dynamixel limits (want to avoid going over -90, 90 deg as it damages the wiring)
-            if theta < - np.pi or theta > np.pi or math.isnan(theta):
+            if theta < - np.pi/2 or theta > np.pi/2 or math.isnan(theta):
                 all_valid = False
                 break
         
@@ -116,7 +116,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
             all_valid = True
             for theta in theta_list:
                 # Check dynamixel limits (want to avoid going over -90, 90 deg as it damages the wiring)
-                if theta < - np.pi or theta > np.pi or math.isnan(theta):
+                if theta < - np.pi/2 or theta > np.pi/2 or math.isnan(theta):
                     all_valid = False
                     # This means both sln are invalid: return to zero config
                     msg.position = [0, 0, 0, 0]
