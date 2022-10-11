@@ -1,69 +1,119 @@
-from math import atan2
-from numpy import sin, cos, sqrt
-from numpy import pi, abs
+"""
+Inverse kinematics
+"""
 
-def inverse_kinematics(
-        end_effector_pos : list,
-        link_length : list,
-        pitch_angle : int
-    ):
-    """Calculate the joint positions from an end effector configuration.
+import numpy as np
+import math
+
+def inverse_kinematics(x, y, z):
     
-    Args:
-        pose: The end effector configuration.
-        lengths: The lengths of each links.
+    # End eff posiiton
+    x_end = x
+    y_end = y
+    z_end = z
 
-    Returns:
-        The angles of each joint to the end effector.
-    """
+    # mm link lengths (from cad)
+    l1 = 75 # link_length[0] (used for horizontal grab)
+    l2 = 117.5 #link_lengths[1]
+    l3 = 95 #link_lengths[2]
+    l4 = 85 #link_lengths[3]
+
+    # Check reachable within workspace
+    # Gripper at 90 deg
+    max_length_gripper_90 = l2 + l3
+
+    # Gripper at 0 deg
+    max_length_gripper_0 = l2 + l4 + np.sqrt(l3**2 - l1**2)
+
+    gripper_90_valid = False
+
+    gripper_0_valid = False
+
+    if x_end < max_length_gripper_0:
+        gripper_0_valid = True
+
+    if x_end < max_length_gripper_90:
+        gripper_90_valid = True
+
+    # Try gripper 90 deg sln first
+    if gripper_90_valid:
+        psi = -np.pi/2
+
+        # Find pos at dynamixel 4
+        x_4 = x_end
+        y_4 = y_end + l4
+        z_4 = z_end
+
+        # Elbow up
+        c_theta_3 = (x_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
+        theta_3 = np.arctan2(-np.sqrt(1-c_theta_3), c_theta_3)
+        theta_2 = np.arctan2(y_4, x_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
+        theta_4 = -psi - theta_2 - theta_3
+        theta_1 = np.arctan(z_4/ x_4)
+
+        # Convert to dynamixel input TODO: check if any of the dynamixel values need to be negated/flipped (so far seems like 4 needs to be)
+        theta_3 = -theta_3
+        theta_2 = np.pi/2 - theta_2
+        theta_4 = - theta_4
+
+        theta_list  = [theta_1, theta_2, theta_3, theta_4]
+        # Check limits
+        # TODO: COLLISION AVOIDANCE
+        all_valid = True
+        for theta in theta_list:
+            # Check dynamixel limits (want to avoid going over -90, 90 deg as it damages the wiring)
+            if theta < - np.pi or theta > np.pi or math.isnan(theta):
+                all_valid = False
+                break
+        
+        if all_valid:
+            degs = []
+            for theta in theta_list:
+                degs.append(np.rad2deg(theta))
+            return degs
+
+        elif not all_valid and gripper_0_valid:
+            # Try gripper 0 position
+            psi = 0
+
+            # Find pos at dynamixel 4
+            x_4 = x_end - l4
+            y_4 = y_end
+            z_4 = z_end
+
+            # Elbow up
+            c_theta_3 = (x_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
+            theta_3 = np.arctan2(-np.sqrt(1-c_theta_3), c_theta_3)
+            theta_2 = np.arctan2(y_4, x_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
+            theta_4 = -psi - theta_2 - theta_3
+            theta_1 = np.arctan(z_4/ x_4)
+
+            # Convert to dynamixel input TODO: check if any of the dynamixel values need to be negated/flipped (so far seems like 4 needs to be)
+            theta_3 = -theta_3
+            theta_2 = np.pi/2 - theta_2
+            theta_4 = - theta_4
+
+            theta_list  = [theta_1, theta_2, theta_3, theta_4]
+            # Check limits
+            # TODO: COLLISION AVOIDANCE
+            all_valid = True
+            for theta in theta_list:
+                # Check dynamixel limits (want to avoid going over -90, 90 deg as it damages the wiring)
+                if theta < - np.pi or theta > np.pi or math.isnan(theta):
+                    all_valid = False
+                    # This means both sln are invalid: return to zero config
+                    return [0, 0, 0, 0]
+            
+            if all_valid:
+                degs = []
+                for theta in theta_list:
+                    degs.append(np.rad2deg(theta))
+                return degs
 
 
-    #To test it:
-    #cd ~/catkin_ws
-    #catkin_make
-    #source devel/setup.bash
-    #roslaunch dynamixel_interface dynamixel_interface_controller.launch
-    #rostopic pub /desired_joint_states /msg_JointState [TAB]
-    #echo 0 | sudo tee /sys/module/usbcore/parameters/usbfs_memory_mb
 
-    # Define variables (Don't exceed robot arm length)
-    # Coordinates of end-effector (cubes)
-    x = end_effector_pos[0] # y-coordinate of end-effector
-    y = end_effector_pos[1] # x-coordinate of end-effector
-    z = end_effector_pos[2] # z-coordinate of end-effector
-    #*****^^^This will be replaced by subscriber/publisher***********# 
+def main():
+    print(inverse_kinematics(150, 150, 150))
 
-    alpha = pitch_angle # angle of gripper (0 to 90), set to 90 [radians]
-
-    # Dimentsions of the robot (in mm)
-    L1 = link_length[0]
-    L2 = link_length[1]
-    L3 = link_length[2]
-    L4 = link_length[3]
-    # Position of joint 3
-    pxy = sqrt(x**2 + y**2) - L4*cos(alpha) 
-    pz = z - L4*sin(alpha) - L1 #joint 3 y coordinate
-    
-    C_theta_3 = (pxy**2 + pz**2 - L2**2 - L3**2) / (2 * L2 * L3) 
-
-    #Angle Calculations (in radians)
-    theta_1 = atan2(x,y)
-    theta_3 = atan2(-sqrt(abs(1-C_theta_3**2)), C_theta_3)
-    theta_2 = (atan2(pz,pxy)  -  atan2(L3*sin(theta_3),  L2+L3*cos(theta_3)))
-    theta_4 = (alpha - theta_2 - theta_3) % (2*pi)
-
-    if theta_4 > pi:
-        theta_4 = -((2*pi) - theta_4)
-
-    #Update angles
-    theta_1 = theta_1
-    theta_2 = pi/2-theta_2
-    theta_3 = -theta_3
-    theta_4 = theta_4
-    # if theta_4 > pi:
-    #     theta_4 = -((2*pi) - theta_4)
-
-    # Publish thetas to the robot
-    # return list of thetas
-    return [theta_1, theta_2, theta_3, theta_4]
-
+if __name__ == '__main__':
+    main()
