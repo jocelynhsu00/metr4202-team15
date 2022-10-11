@@ -113,7 +113,7 @@ def inverse_kinematics(x, y, z):
 
 
 def main():
-    print(inverse_kinematics(100, 50, 0))
+    print(inverse_kinematics(100, 100, 0))
 
 if __name__ == '__main__':
     main()
