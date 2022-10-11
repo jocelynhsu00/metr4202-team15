@@ -6,17 +6,16 @@ import numpy as np
 import math
 
 def inverse_kinematics(x, y, z):
-    
-    # End eff posiiton
-    x_end = x
-    y_end = y
-    z_end = z
-
     # mm link lengths (from cad)
     l1 = 75 # link_length[0] (used for horizontal grab)
     l2 = 117.5 #link_lengths[1]
     l3 = 95 #link_lengths[2]
     l4 = 85 #link_lengths[3]
+
+    # End eff posiiton
+    x_end = x
+    y_end = y - l1 # TODO: This does some weird stuff
+    z_end = z
 
     # Check reachable within workspace
     # Gripper at 90 deg
@@ -57,12 +56,13 @@ def inverse_kinematics(x, y, z):
         theta_4 = - theta_4
 
         theta_list  = [theta_1, theta_2, theta_3, theta_4]
+        # print(theta_list)
         # Check limits
         # TODO: COLLISION AVOIDANCE
         all_valid = True
         for theta in theta_list:
             # Check dynamixel limits (want to avoid going over -90, 90 deg as it damages the wiring)
-            if theta < - np.pi/2 or theta > np.pi/2 or math.isnan(theta):
+            if theta < - np.deg2rad(110) or theta > np.deg2rad(110) or math.isnan(theta):
                 all_valid = False
                 break
         
@@ -94,12 +94,13 @@ def inverse_kinematics(x, y, z):
             theta_4 = - theta_4
 
             theta_list  = [theta_1, theta_2, theta_3, theta_4]
+            # print(theta_list)
             # Check limits
             # TODO: COLLISION AVOIDANCE
             all_valid = True
             for theta in theta_list:
                 # Check dynamixel limits (want to avoid going over -90, 90 deg as it damages the wiring)
-                if theta < - np.pi/2 or theta > np.pi/2 or math.isnan(theta):
+                if theta < - np.deg2rad(110) or theta > np.deg2rad(110) or math.isnan(theta):
                     all_valid = False
                     # This means both sln are invalid: return to zero config
                     return [0, 0, 0, 0]

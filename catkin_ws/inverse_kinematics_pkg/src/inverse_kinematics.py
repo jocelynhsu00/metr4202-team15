@@ -27,10 +27,16 @@ def inverse_kinematics(pose: Pose) -> JointState:
         name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
     )
     
+    # mm link lengths (from cad)
+    l1 = 75 
+    l2 = 117.5 
+    l3 = 95 
+    l4 = 85 
+
     # End eff posiiton
-    x_end = pose.position.x #end_eff[0]
-    y_end = pose.position.y #end_eff[1]
-    z_end = pose.position.z #nd_eff[2]
+    x_end = pose.position.x 
+    y_end = pose.position.y - l1
+    z_end = pose.position.z 
 
     # mm link lengths (from cad)
     l1 = 75 # link_length[0] (used for horizontal grab)
@@ -82,7 +88,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
         all_valid = True
         for theta in theta_list:
             # Check dynamixel limits (want to avoid going over -90, 90 deg as it damages the wiring)
-            if theta < - np.pi/2 or theta > np.pi/2 or math.isnan(theta):
+            if theta < -np.deg2rad(110) or theta > np.deg2rad(110) or math.isnan(theta):
                 all_valid = False
                 break
         
@@ -116,7 +122,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
             all_valid = True
             for theta in theta_list:
                 # Check dynamixel limits (want to avoid going over -90, 90 deg as it damages the wiring)
-                if theta < - np.pi/2 or theta > np.pi/2 or math.isnan(theta):
+                if theta < -np.deg2rad(110) or theta > np.deg2rad(110) or math.isnan(theta):
                     all_valid = False
                     # This means both sln are invalid: return to zero config
                     msg.position = [0, 0, 0, 0]
