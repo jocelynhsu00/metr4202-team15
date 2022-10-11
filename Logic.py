@@ -1,5 +1,6 @@
 #includes stuff
 import numpy as np
+import time
 centre_x = 0
 centre_y = 0
 
@@ -34,7 +35,18 @@ class Block:
                 theta = np.pi - phi
             else if self.y < centre_y:
                 theta = np.pi + phi
-
+        return theta
+    
+    def get_omega(self):
+        #uses two thetas to find the angular velocity of the cube
+        theta1 = get_theta
+        time.sleep(3)
+        theta2 = get_theta
+        delta_theta = theta2 - theta1
+        omega = delta_theta/3
+        return omega
+        
+        
 
 
 
