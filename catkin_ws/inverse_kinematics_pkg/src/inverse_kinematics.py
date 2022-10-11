@@ -36,128 +36,131 @@ def inverse_kinematics(pose: Pose) -> JointState:
     py_end = pose.position.y #end_eff[1]
     pz_end = pose.position.z #nd_eff[2]
 
-    alpha = np.pi / 2 # Gripper always angled at 90 deg to ground, can be changed if needed
+    psi = - np.pi / 2 # Gripper always angled at - 90 deg relative to ground, can be changed if needed
 
     # mm link lengths (from cad)
-    l1 = 75 # link_length[0]
+    l1 = 53 # link_length[0] (not used)
     l2 = 117.5 #link_lengths[1]
     l3 = 95 #link_lengths[2]
     l4 = 85 #link_lengths[3]
 
-    # First calculate position at end of link 3
-    px_3 = px_end - l4 * np.cos(alpha)
-    py_3 = py_end - l4 * np.sin(alpha)
-    pz_3 = pz_end # z pos doesnt change
+    # Get position of arm at theta 4
+    px_4 = px_end - l4 * np.cos(psi)
+    py_4 = py_end - l4 * np.sin(psi)
+    pz_4 = pz_end # Stays the same, robot is rigid in this position
 
-    c_theta_3 = (px_3 ** 2 + py_3 ** 2 - l2 ** 2 - l3 ** 2) / (2 * l2 * l3)
+    # Consider 2dof arm
+    theta_3 = np.arccos((px_4**2 + py_4**2 - (l2**2 + l3**2))/(2*l2*l3))
+    theta_2 = np.arctan(py_4/px_4) - np.arctan((l3*np.sin(theta_3))/(l2+l3*np.cos(theta_3)))
 
-    # Want elbow up solution
-    theta_1 = np.arctan2(px_end, pz_end) # Maybe needs to 90 - theta_1 
-    theta_3 = np.arctan2(c_theta_3, - np.sqrt(1 - c_theta_3 ** 2))
-    theta_2 = np.arctan2(py_3, px_3) - np.arctan2(l2 + l3 * np.cos(theta_3), l3 * np.sin(theta_3))
-    theta_4 = alpha - (theta_2 + theta_3)
+    # Update angles for elbow up solution
+    theta_3 = - theta_3
+    theta_2 = np.pi/2 - theta_2
 
-    # Convert angles for input to dynamixels
-    theta_2 = (np.pi/2) - theta_2
-    theta_3 = -theta_3
+    theta_4 = psi - (theta_2 + theta_3)
 
-    theta_list = [theta_1, theta_2, theta_3, theta_4]
+    theta_1 = np.arctan(pz_end/px_end)
 
     # Check limits
+    theta_list = [theta_1, theta_2, theta_3, theta_4]
 
-    # Check if angles have been updated 
-    angles_updated = False
+    # Assume all valid
+    all_valid = True
 
     for theta in theta_list:
-        # Check collision
-        if theta < -np.deg2rad(150) or theta > np.deg2rad(150):
-            # Indicate the angles are being updated
-            angles_updated = True
-
-            # Try orienting gripper at 0 deg to table
-            alpha = 0
-            # First calculate position at end of link 3
-            px_3 = px_end - l4 * np.cos(alpha)
-            py_3 = py_end - l4 * np.sin(alpha)
-            pz_3 = pz_end # z pos doesnt change
-
-            c_theta_3 = (px_3 ** 2 + py_3 ** 2 - l2 ** 2 - l3 ** 2) / (2 * l2 * l3)
-
-            theta_1 = np.arctan2(px_end, pz_end) # Maybe needs to 90 - theta_1 
-            theta_3 = np.arctan2(c_theta_3, - np.sqrt(1 - c_theta_3 ** 2))
-            theta_2 = np.arctan2(py_3, px_3) - np.arctan2(l2 + l3 * np.cos(theta_3), l3 * np.sin(theta_3))
-            theta_4 = alpha - (theta_2 + theta_3)
-
-            # Convert angles for input to dynamixels
-            theta_2 = (np.pi/2) - theta_2
-            theta_3 = -theta_3
-
-            # Update theta list
-            theta_list = theta_list = [theta_1, theta_2, theta_3, theta_4]
+        # Check for invalid
+        if theta < -1.5 or theta > 1.5:
+            # Invalid
+            all_valid = False
             break
 
-    # Check updated solution
-    if angles_updated:
-        all_valid = True
-        # Check collision
-        for theta in theta_list:
-            if theta < -np.deg2rad(150) or theta > np.deg2rad(150):
-                # Updated solution is invalid
-                all_valid = False
-                # Set to random pos
-                print("Setting to standard pos")
-                msg.position = [
-                    0,
-                    0,
-                    1,
-                    0
-                ]
-                break
-
-    # Only publish valid solution
+    # Only publish if angles are valid
     if all_valid:
-        msg.position = [
-            theta_1,
-            theta_2,
-            theta_3,
-            theta_4
-        ]
+        msg.position = theta_list
+        rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
+        pub.publish(msg)
 
-    rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
-    pub.publish(msg)
+    # # First calculate position at end of link 3
+    # px_3 = px_end - l4 * np.cos(alpha)
+    # py_3 = py_end - l4 * np.sin(alpha)
+    # pz_3 = pz_end # z pos doesnt change
 
+    # c_theta_3 = (px_3 ** 2 + py_3 ** 2 - l2 ** 2 - l3 ** 2) / (2 * l2 * l3)
 
-#     # Check if theta 4 is valid, change phi if not (alternates between 0 and 90, can set to arbitrary value later)
-#     if theta_4 < -1.5 or theta_4 > 1.5:
-#         phi = 0
-#         theta_4 = phi - (theta_2 + theta_3)
+    # # Want elbow up solution
+    # theta_1 = np.arctan2(px_end, pz_end) # Maybe needs to 90 - theta_1 
+    # theta_3 = np.arctan2(c_theta_3, - np.sqrt(1 - c_theta_3 ** 2))
+    # theta_2 = np.arctan2(py_3, px_3) - np.arctan2(l2 + l3 * np.cos(theta_3), l3 * np.sin(theta_3))
+    # theta_4 = alpha - (theta_2 + theta_3)
 
-#     # Collision detection (ensure all theta values between -pi/2 and pi/2)
-#     for theta in [theta_1, theta_2, theta_3, theta_4]:
-#         # If any values result in collision, use second solution
-#         if theta < -1.5 or theta > 1.5:
-#             theta_1 = np.arctan2(py, px)
-#             theta_3 = np.arctan2(c_theta_3, - np.sqrt(1 - c_theta_3 ** 2))
-#             theta_2 = np.arctan2(px, pz) - np.arctan2(l2 + l3 * np.cos(theta_3), l3 * np.sin(theta_3))
-#             theta_4 = phi - (theta_2 + theta_3)
-#             used_second_sol = True
-#             break
-    
-#    # Check if theta 4 is valid, change phi if not (alternates between 0 and 90, can set to arbitrary value later)
-#     if not (-1.5 < theta_4 < 1.5):
-#         phi = 0
-#         theta_4 = phi - (theta_2 + theta_3)
+    # # Convert angles for input to dynamixels
+    # theta_2 = (np.pi/2) - theta_2
+    # theta_3 = -theta_3
 
-    # msg.position = [
-    #     theta_1,
-    #     theta_2,
-    #     theta_3,
-    #     theta_4
-    # ]
+    # theta_list = [theta_1, theta_2, theta_3, theta_4]
+
+    # # Check limits
+
+    # # Check if angles have been updated 
+    # angles_updated = False
+
+    # for theta in theta_list:
+    #     # Check collision
+    #     if theta < -np.deg2rad(150) or theta > np.deg2rad(150):
+    #         # Indicate the angles are being updated
+    #         angles_updated = True
+
+    #         # Try orienting gripper at 0 deg to table
+    #         alpha = 0
+    #         # First calculate position at end of link 3
+    #         px_3 = px_end - l4 * np.cos(alpha)
+    #         py_3 = py_end - l4 * np.sin(alpha)
+    #         pz_3 = pz_end # z pos doesnt change
+
+    #         c_theta_3 = (px_3 ** 2 + py_3 ** 2 - l2 ** 2 - l3 ** 2) / (2 * l2 * l3)
+
+    #         theta_1 = np.arctan2(px_end, pz_end) # Maybe needs to 90 - theta_1 
+    #         theta_3 = np.arctan2(c_theta_3, - np.sqrt(1 - c_theta_3 ** 2))
+    #         theta_2 = np.arctan2(py_3, px_3) - np.arctan2(l2 + l3 * np.cos(theta_3), l3 * np.sin(theta_3))
+    #         theta_4 = alpha - (theta_2 + theta_3)
+
+    #         # Convert angles for input to dynamixels
+    #         theta_2 = (np.pi/2) - theta_2
+    #         theta_3 = -theta_3
+
+    #         # Update theta list
+    #         theta_list = theta_list = [theta_1, theta_2, theta_3, theta_4]
+    #         break
+
+    # # Check updated solution
+    # all_valid = True
+    # if angles_updated:
+    #     # Check collision
+    #     for theta in theta_list:
+    #         if theta < -np.deg2rad(150) or theta > np.deg2rad(150):
+    #             # Updated solution is invalid
+    #             all_valid = False
+    #             # Set to random pos
+    #             print("Setting to standard pos")
+    #             msg.position = [
+    #                 0,
+    #                 0,
+    #                 1,
+    #                 0
+    #             ]
+    #             break
+
+    # # Only publish valid solution
+    # if all_valid:
+    #     msg.position = [
+    #         theta_1,
+    #         theta_2,
+    #         theta_3,
+    #         theta_4
+    #     ]
 
     # rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
     # pub.publish(msg)
-
 
 def main():
     global pub
