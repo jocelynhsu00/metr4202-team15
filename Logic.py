@@ -57,7 +57,9 @@ class Block:
         pred_x = np.arccos(pred_theta)*self.r
         
         
-
+def block_distance(b1,b2):
+    d = np.sqrt((b1.x-b2.x)^2+(b1.y-b2.y)^2)
+    return(d)
 
 
 
