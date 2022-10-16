@@ -2,6 +2,12 @@
 import numpy as np
 import time
 import pigpio 
+import inverse_kinematics as inkin
+
+from std_msgs.msg import Header
+from sensor_msgs.msg import JointState
+from geometry_msgs.msg import Pose
+
 centre_x = 0
 centre_y = 0
 
@@ -72,8 +78,8 @@ def block_distance(b1,b2):
 
 
 
-def transform(x, y, z, theta):
-    return 0 
+#def transform(x, y, z, theta):
+   #return 0 
 
 
 
@@ -98,21 +104,39 @@ def grip_box():
 
 #def ready position 
 
-#def grab_box(block) 
-    
+def grab_box(block) :
+    pose = Pose 
+    pose.position.x = 100
+    pose.position.y = 100
+    pose.position.z = 0
     #start at ready pos 
+    inkin.inverse_kinematics(pose)
+    inkin.publish()
     #block predict pos 
-
+    pose.position.x, pose.position.y = block.predict_pos()
+    pose.position.y = pose.position.y + 20
     #move to predicted pos 
-
+    inkin.inverse_kinematics(pose)
+    inkin.publish()
     #maybe wait for box to move underneath
-
     #move down 
-    #grip_box()
+    pose.position.y = pose.position.y - 20
+    inkin.inverse_kinematics(pose)
+    inkin.publish()
+    #gripbox
+    grip_box()
     #move up
+    pose.position.y = pose.position.y + 20
+    inkin.inverse_kinematics(pose)
+    inkin.publish()
     #move to dropoff zone
-    #grip_open()
-    #reset to ready position 
+    pose.position.x = 0
+    pose.position.y = 0
+    pose.position.z = 0
+    #gripopen
+    grip_open()
+    #reset to ready position \
+    return 0 
     
 
 #def find dropoff zone 

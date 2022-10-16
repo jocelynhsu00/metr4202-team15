@@ -186,7 +186,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
             pub.publish(msg)
 
 
-def main():
+def publish():
     global pub
     # Create publisher
     pub = rospy.Publisher(
@@ -207,6 +207,3 @@ def main():
 
     # Stops Python from exiting and executes callbacks
     rospy.spin()
-
-if __name__ == '__main__':
-    main()
