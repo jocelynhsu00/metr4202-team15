@@ -15,7 +15,7 @@ def inverse_kinematics(x, y, z):
     # End eff posiiton
     x_end = x
     x_end_abs = abs(x)
-    y_end = y - l1# TODO: This does some weird stuff
+    y_end = y - l1
     z_end = z
 
     # Check reachable within workspace
@@ -46,18 +46,18 @@ def inverse_kinematics(x, y, z):
 
         # Elbow up
         c_theta_3 = (x_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
-        # IF x is negative, elbow up is +ve sln rather than negative
-        if x_4 < 0:
-            theta_3 = np.arctan2(np.sqrt(1-c_theta_3), c_theta_3)
-        elif x_4 > 0:
-            theta_3 = np.arctan2(-np.sqrt(1-c_theta_3), c_theta_3)
+        theta_3 = np.arctan2(-np.sqrt(1-c_theta_3), c_theta_3)
+        theta_2 = np.arctan2(y_4, x_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
+        theta_4 = -psi - theta_2 - theta_3
+        theta_1 = np.arctan(z_4/x_4)
 
         theta_2 = np.arctan2(y_4, x_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
         theta_4 = -psi - theta_2 - theta_3
         theta_1 = np.arctan(z_4/ x_4)
 
-        # Convert to dynamixel input TODO: check if any of the dynamixel values need to be negated/flipped (so far seems like 4 needs to be)
+        # Convert to dynamixel input 
         theta_3 = -theta_3
+
         theta_2 = np.pi/2 - theta_2
         if x_4 < 0:
             theta_2 = - theta_2
@@ -68,6 +68,7 @@ def inverse_kinematics(x, y, z):
         theta_2 = -theta_2
         theta_1 = -theta_1
 
+        # Negate if -ve x
         if x_end < 0:
             # Negating
             theta_4 = -theta_4
@@ -110,35 +111,36 @@ def inverse_kinematics(x, y, z):
             y_4 = y_end 
             z_4 = z_end
 
-            # Elbow up
-            c_theta_3 = (x_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
+        # Elbow up
+        c_theta_3 = (x_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
+        theta_3 = np.arctan2(-np.sqrt(1-c_theta_3), c_theta_3)
+        theta_2 = np.arctan2(y_4, x_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
+        theta_4 = -psi - theta_2 - theta_3
+        theta_1 = np.arctan(z_4/x_4)
 
-            # IF x is negative, elbow up is +ve sln rather than negative
-            if x_4 < 0:
-                theta_3 = np.arctan2(np.sqrt(1-c_theta_3), c_theta_3)
-            elif x_4 > 0:
-                theta_3 = np.arctan2(-np.sqrt(1-c_theta_3), c_theta_3)
+        theta_2 = np.arctan2(y_4, x_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
+        theta_4 = -psi - theta_2 - theta_3
+        theta_1 = np.arctan(z_4/ x_4)
 
-            theta_2 = np.arctan2(y_4, x_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
-            theta_4 = -psi - theta_2 - theta_3
-            theta_1 = np.arctan(z_4/ x_4)
+        # Convert to dynamixel input TODO: check if any of the dynamixel values need to be negated/flipped (so far seems like 4 needs to be)
+        theta_3 = -theta_3
 
-            # Convert to dynamixel input TODO: check if any of the dynamixel values need to be negated/flipped (so far seems like 4 needs to be)
-            theta_3 = -theta_3
-            theta_2 = np.pi/2 - theta_2
-            if x_4 < 0:
-                theta_2 = - theta_2
+        theta_2 = np.pi/2 - theta_2
+        if x_4 < 0:
+            theta_2 = - theta_2
+        
+        # Negating
+        theta_4 = -theta_4
+        theta_3 = -theta_3
+        theta_2 = -theta_2
+        theta_1 = -theta_1
+
+        # Negate if -ve x
+        if x_end < 0:
             # Negating
             theta_4 = -theta_4
             theta_3 = -theta_3
             theta_2 = -theta_2
-            theta_1 = -theta_1
-
-            if x_end < 0:
-                # Negating
-                theta_4 = -theta_4
-                theta_3 = -theta_3
-                theta_2 = -theta_2
 
             theta_list  = [theta_1, theta_2, theta_3, theta_4]
             # print(theta_list)
@@ -169,7 +171,7 @@ def inverse_kinematics(x, y, z):
 
 
 def main():
-    print(inverse_kinematics(100, 100, 0))
+    print(inverse_kinematics(-100, 100, 0))
 
 if __name__ == '__main__':
     main()
