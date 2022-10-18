@@ -1,4 +1,4 @@
-import Logic.py as L
+import Logic as L
 
 state = 0
 while(1):
@@ -23,20 +23,20 @@ while(1):
         #Not sure how to do this
 
         # selected_block = green # or red or blue or what ever you chose 
-        L.grip.open()
+        L.grip_open()
         state += 1 
 
 
     if state == 2 :
         #Grab and move 
         # selected_block.L.grab_box()
-        L.grip.block()
+        L.grip_box()
         state += 1 
 
 
 
     if state == 3 :
         #reset 
-        L.grip.close()
+        L.grip_close()
         state = 0
         
