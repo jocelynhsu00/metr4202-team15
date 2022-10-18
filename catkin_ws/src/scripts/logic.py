@@ -22,6 +22,11 @@ rpi.set_mode(18, pigpio.OUTPUT)
 
 id_list = []
 
+Mcr = np.array([[1,0,0,0],
+                         [0,1,0,0],
+                         [0,0,1,0],
+                         [1,1,1,1]]).T
+
 class Block:
     def __init__(self, x, y, z):
         self.x = x 
@@ -86,8 +91,15 @@ def block_distance(b1,b2):
 
 
 
-#def transform(x, y, z, theta):
-   #return 0 
+def transform(x, y, z):
+    Pc = np.array([x,y,z])
+    Pr = np.dot(np.linalg.inv(Mcr),Pc)
+    robot_frame_x = Pr[0,3]
+    robot_frame_y = Pr[1,3]
+    robot_frame_z = Pr[2,3]
+    #robot_frame_theta = 
+
+    return robot_frame_x, robot_frame_y, robot_frame_z 
 
 
 
@@ -112,39 +124,40 @@ def grip_box():
 
 #def ready position 
 
-def grab_box(block) :
-    pose = Pose 
-    pose.position.x = 100
+def grab_box():
+    global pub
+    pose = Pose()
+    pose.position.x = 110
     pose.position.y = 100
     pose.position.z = 0
     #start at ready pos 
-    inverse_kinematics(pose)
-    publish()
-    #block predict pos 
-    pose.position.x, pose.position.y = block.predict_pos()
-    pose.position.y = pose.position.y + 20
-    #move to predicted pos 
-    inverse_kinematics(pose)
-    publish()
-    #maybe wait for box to move underneath
-    #move down 
-    pose.position.y = pose.position.y - 20
-    inverse_kinematics(pose)
-    publish()
-    #gripbox
-    grip_box()
-    #move up
-    pose.position.y = pose.position.y + 20
-    inverse_kinematics(pose)
-    publish()
-    #move to dropoff zone
-    pose.position.x = 0
-    pose.position.y = 0
-    pose.position.z = 0
-    #gripopen
-    grip_open()
+    rospy.loginfo(f"sending desired pose {pose.position}")
+    pub.publish(pose)
+    # #block predict pos 
+    # pose.position.x, pose.position.y = block.predict_pos()
+    # pose.position.y = pose.position.y + 20
+    # #move to predicted pos 
+    # inverse_kinematics(pose)
+    # pub.publish()
+    # #maybe wait for box to move underneath
+    # #move down 
+    # pose.position.y = pose.position.y - 20
+    # pub.publish()
+    
+    # #gripbox
+    # grip_box()
+    # #move up
+    # pose.position.y = pose.position.y + 20
+    
+    # pub.publish()
+    # #move to dropoff zone
+    # pose.position.x = 0
+    # pose.position.y = 0
+    # pose.position.z = 0
+    # #gripopen
+    # grip_open()
     #reset to ready position \
-    return 0 
+
     
 
 #def find dropoff zone 
@@ -183,38 +196,53 @@ def get_camera_list(data : String):
         camera_list.append(float(i))
 
     if camera_list[0] in id_list:
+        #need to transform frame first
+
         #use update_pos()
-        camera_list[0].update_pos(camera_list[1], camera_list[2], camera_list[3])
+        camera_list[0].update_pos(transform(camera_list[1], camera_list[2], camera_list[3]))
     else:
         id_list.append(camera_list[0])
-        camera_list[0] = Block(camera_list[1], camera_list[2], camera_list[3])
-        pub.publish(str(id_list))
+        #need to transform frame first
+
+    camera_list[0] = Block(transform(camera_list[1], camera_list[2], camera_list[3]))
+    test.publish(str(id_list))
     
 
 
 def main():
     global pub
+    global test
+
+    # Initialise node with any node name
+    rospy.init_node('logic')
     # # Create publisher
     # pub = rospy.Publisher(
     #     'desired_joint_states', # Topic name
     #     JointState, # Message type
     #     queue_size=10 # Topic size (optional)
     # )
-    pub = rospy.Publisher('tester', String, queue_size=10)
+    # test = rospy.Publisher('tester', String, queue_size=10)
     # Create subscriber
+
+    pub = rospy.Publisher(
+        'desired_pose', # Topic name
+        Pose,
+        queue_size=10 # Message type
+        )
+
+    
     sub = rospy.Subscriber(
         'camera_list', # Topic name
         String, # Message type
         get_camera_list # Callback function (required)
     )
-
-
-    # Initialise node with any node name
-    rospy.init_node('joint_states')
+    while(1):
+        grab_box()
+    
 
     # You spin me right round baby, right round...
     # Just stops Python from exiting and executes callbacks
     rospy.spin()
 
 if __name__ == "__main__":
-    main()
+    main()    
