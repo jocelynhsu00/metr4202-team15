@@ -2,6 +2,7 @@
 
 #includes stuff
 from concurrent.futures.process import _chain_from_iterable_of_lists
+from tkinter import NONE
 from matplotlib.pyplot import subplot
 import numpy as np
 import time
@@ -20,22 +21,32 @@ centre_y = 0
 rpi = pigpio.pi()
 rpi.set_mode(18, pigpio.OUTPUT)
 
-id_list = []
+block_list = []
 
 Mcr = np.array([[1,0,0,0],
-                         [0,1,0,0],
-                         [0,0,1,0],
-                         [1,1,1,1]]).T
+                [0,1,0,0],
+                [0,0,1,0],
+                [1,1,1,1]]).T
 
 class Block:
-    def __init__(self, x, y, z):
+    def __init__(self, x, y, z, block_id):
         self.x = x 
         self.y = y
         self.z = z
+        self.block_id = block_id
         self.theta = self.get_theta()
         self.r = np.sqrt((self.x-centre_x)**2+(self.y-centre_y)**2)
 
-    def update_Pos(self, x, y, z):
+        self.pub = rospy.Publisher(
+            'desired_pose', # Topic name
+            Pose,
+            queue_size=10 # Message type
+        )
+
+    def get_block_id(self):
+        return self.block_id
+
+    def update_pos(self, x, y, z):
         #Update a block opjects current position.
         #maybe update r. 
         self.x = x
@@ -45,7 +56,7 @@ class Block:
         self.r = np.sqrt((self.x-centre_x)**2+(self.y-centre_y)**2)
         return 0 
 
-    def get_Pos(self):
+    def get_pos(self):
         # Get blocks current position.
         return self.x, self.y, self.z
     
@@ -80,11 +91,49 @@ class Block:
         return pred_x, pred_y
         
         
-def block_distance(b1,b2):
-    d = np.sqrt((b1.x-b2.x)**2+(b1.y-b2.y)**2)
-    return(d)
+    def block_distance(b1,b2):
+        d = np.sqrt((b1.x-b2.x)**2+(b1.y-b2.y)**2)
+        return(d)
 
 
+    def grab_box(self):
+        #reset()
+
+        #test
+        rospy.loginfo('Grab box')
+        pose = Pose()
+        pose.position.x = self.x
+        pose.position.y = self.y
+        pose.position.z = self.z
+        #start at ready pos 
+        self.pub.publish(pose)
+
+
+        # #block predict pos 
+        # pose.position.x, pose.position.y = block.predict_pos()
+        # pose.position.y = pose.position.y + 20
+
+        # #move to predicted pos 
+
+        # #maybe wait for box to move underneath
+
+        # #move down 
+        # pose.position.y = pose.position.y - 20
+
+        
+        # #gripbox
+        # grip_box()
+        # #move up
+        # pose.position.y = pose.position.y + 20
+        
+        # pub.publish()
+        # #move to dropoff zone
+        # pose.position.x = 0
+        # pose.position.y = 0
+        # pose.position.z = 0
+        # #gripopen
+        # grip_open()
+        #reset to ready position \
 
 
 
@@ -92,22 +141,22 @@ def block_distance(b1,b2):
 
 
 def transform(x, y, z):
-    Pc = np.array([x,y,z])
+    Pc = np.array([x,y,z,1])
     Pr = np.dot(np.linalg.inv(Mcr),Pc)
-    robot_frame_x = Pr[0,3]
-    robot_frame_y = Pr[1,3]
-    robot_frame_z = Pr[2,3]
+    robot_frame_x = Pr[0]
+    robot_frame_y = Pr[1]
+    robot_frame_z = Pr[2]
     #robot_frame_theta = 
 
     return robot_frame_x, robot_frame_y, robot_frame_z 
 
 
 
-#sample 
+    #sample 
 
 
 
-#Gripper code 
+    #Gripper code 
 
 def grip_close():
     rpi.set_servo_pulsewidth(18, 1000)
@@ -115,106 +164,84 @@ def grip_close():
 
 def grip_open():
     rpi.set_servo_pulsewidth(18, 2000)
-    return 0
+    return 0   
 
 def grip_box():
     rpi.set_servo_pulsewidth(18, 1500)
     return 0
 
 
-#def ready position 
+    #def ready position 
 
-def grab_box():
-    global pub
+
+    #def find dropoff zone 
+
+def reset() :
     pose = Pose()
     pose.position.x = 110
     pose.position.y = 100
     pose.position.z = 0
     #start at ready pos 
     rospy.loginfo(f"sending desired pose {pose.position}")
-    pub.publish(pose)
-    # #block predict pos 
-    # pose.position.x, pose.position.y = block.predict_pos()
-    # pose.position.y = pose.position.y + 20
-    # #move to predicted pos 
-    # inverse_kinematics(pose)
-    # pub.publish()
-    # #maybe wait for box to move underneath
-    # #move down 
-    # pose.position.y = pose.position.y - 20
-    # pub.publish()
-    
-    # #gripbox
-    # grip_box()
-    # #move up
-    # pose.position.y = pose.position.y + 20
-    
-    # pub.publish()
-    # #move to dropoff zone
-    # pose.position.x = 0
-    # pose.position.y = 0
-    # pose.position.z = 0
-    # #gripopen
-    # grip_open()
-    #reset to ready position \
+    reset_pub.publish(pose)
 
-    
+    return 0
 
-#def find dropoff zone 
 
-def reset() :
-    # Create message of type JointState
-    msg = Pose(
-        # Set header with current time
-        #header=Header(stamp=rospy.Time.now()),
-        # Specify joint names (see `controller_config.yaml` under `dynamixel_interface/config`)
-        #name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
-    )
-
-    #publish()
-    pose = Pose
-    #print(pose) 
-    #print(msg)
-    # pose.position.y = 100
-    # pose.position.z = 0
-    # #start at ready pos 
-    # inverse_kinematics(pose)
-    # publish()
-    # return 0
-
-# def pub():
-#     global pub
-
-#     pub = rospy.Publisher('desired_pose', Pose, reset)
- 
-def get_camera_list(data : String):
+def get_camera_list(data : String): 
+    rospy.loginfo("in get camera list")
     camera_list_string = str(data).split('"')
     camera_list_string = str(camera_list_string[1])
     camera_list_string = str(camera_list_string).split(',')
     camera_list = []
     for i in camera_list_string:
         camera_list.append(float(i))
-
-    if camera_list[0] in id_list:
+    print(camera_list[0])
+    curr_id = camera_list[0]
+    match = False
+    curr_block = None
+    for b in block_list :
+        block_id = b.get_block_id()
+        if block_id == curr_id:
+            match = True
+            curr_block = b
+    if match:
+        rospy.loginfo("ID in id_list")
         #need to transform frame first
 
         #use update_pos()
-        camera_list[0].update_pos(transform(camera_list[1], camera_list[2], camera_list[3]))
-    else:
-        id_list.append(camera_list[0])
-        #need to transform frame first
+        pos = transform(camera_list[1], camera_list[2], camera_list[3])
+        x = pos[0]
+        y = pos[1]
+        z = pos[2]
+        curr_block.update_pos(x, y, z)
+        print("updated existing block position")
 
-    camera_list[0] = Block(transform(camera_list[1], camera_list[2], camera_list[3]))
-    test.publish(str(id_list))
-    
+
+    else:
+        rospy.loginfo("else")
+        #need to transform frame first
+        pos = transform(camera_list[1], camera_list[2], camera_list[3])
+        x = pos[0]
+        y = pos[1]
+        z = pos[2]
+
+        curr_block = Block(x, y, z, curr_id)
+        block_list.append(curr_block)
+        print("created new block")
+
+        # id_list[0].grab_box()
+    #test.publish(str(id_list))
+            
 
 
 def main():
-    global pub
-    global test
-
+    # global pub
+    # global test
+    global reset_pub
     # Initialise node with any node name
     rospy.init_node('logic')
+    rospy.loginfo("initialised node")
     # # Create publisher
     # pub = rospy.Publisher(
     #     'desired_joint_states', # Topic name
@@ -224,7 +251,7 @@ def main():
     # test = rospy.Publisher('tester', String, queue_size=10)
     # Create subscriber
 
-    pub = rospy.Publisher(
+    reset_pub = rospy.Publisher(
         'desired_pose', # Topic name
         Pose,
         queue_size=10 # Message type
@@ -236,8 +263,13 @@ def main():
         String, # Message type
         get_camera_list # Callback function (required)
     )
-    while(1):
-        grab_box()
+
+    rospy.loginfo("subscribing to camera_list")
+    # while(1):
+    #     if len(id_list) != 0:
+    #         id_list[0].grab_box()
+    #     else:
+    #         print(id_list)
     
 
     # You spin me right round baby, right round...
