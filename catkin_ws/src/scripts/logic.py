@@ -23,10 +23,12 @@ rpi.set_mode(18, pigpio.OUTPUT)
 
 block_list = []
 
-Mcr = np.array([[0,-1,0,0],
-                [0,0,1,0],
+Mcr = np.array([[0,1,0,0],
+                [0,0,-1,0],
                 [-1,0,0,0],
-                [0,0,0.1,1]]).T
+                [0,-0.165*140/30,0,1]]).T
+
+
 
 class Block:
     def __init__(self, x, y, z, block_id):
@@ -144,11 +146,12 @@ def transform(x, y, z):
     #get point in robot frame and convert to mm from m
     Pc = np.array([x,y,z,1])
     Pr = np.dot(np.linalg.inv(Mcr),Pc)
-    robot_frame_x = Pr[0] * 1000
+    #also multiply by scaling factor because camera sucks
+    robot_frame_x = (Pr[0] * 1000) * 30/140
     #robot_frame_y = Pr[1] * 100
     #block centre will always be 16mm off the ground and camera height finding is very poor
-    robot_frame_y = 91
-    robot_frame_z = Pr[2] * 1000
+    robot_frame_y = 131
+    robot_frame_z = (Pr[2] * 1000) * 30/140
     #robot_frame_theta = 
 
     return robot_frame_x, robot_frame_y, robot_frame_z 
@@ -220,6 +223,7 @@ def get_camera_list(data : String):
         z = pos[2]
         curr_block.update_pos(x, y, z)
         print("updated existing block position")
+        print(camera_list)
         curr_block.grab_box()
 
 
@@ -280,6 +284,6 @@ def main():
     # You spin me right round baby, right round...
     # Just stops Python from exiting and executes callbacks
     rospy.spin()
-
+grip_open()
 if __name__ == "__main__":
     main()    
