@@ -40,36 +40,38 @@ def inverse_kinematics(pose: Pose) -> JointState:
     z_end = pose.position.z 
     print(x_end_abs, y_end, z_end)
 
-    # Check reachable within workspace
-    # Gripper at 90 deg
-    max_length_gripper_90 = l2 + l3
+    dist_from_centre = np.sqrt(x_end **2 + z_end **2)
 
-    # Gripper at 0 deg
-    max_length_gripper_0 = l2 + l4 + np.sqrt(l3**2 - l1**2)
+    if (x_end > 80 or x_end < -45) and y_end > -50:
+        print("Passed floor collision and env collision check")
 
-    print("Max lengths", max_length_gripper_90, max_length_gripper_0)
+        # Check reachable within workspace
+        # Gripper at 90 deg
+        max_length_gripper_90 = l2 + l3
 
-    gripper_90_valid = False
+        # Gripper at 0 deg
+        max_length_gripper_0 = l2 + l4 + np.sqrt(l3**2 - l1**2)
 
-    gripper_0_valid = False
+        print("Max lengths", max_length_gripper_90, max_length_gripper_0)
 
-    if x_end_abs < max_length_gripper_0:
-        gripper_0_valid = True
+        gripper_90_valid = False
 
-    if x_end_abs < max_length_gripper_90:
-        gripper_90_valid = True
+        gripper_0_valid = False
 
-    print("Check max:", gripper_90_valid, gripper_0_valid)
+        if dist_from_centre < max_length_gripper_0:
+            gripper_0_valid = True
 
-    all_valid = None
+        if dist_from_centre < max_length_gripper_90:
+            gripper_90_valid = True
 
-    theta_list = None
+        print("Check max:", gripper_90_valid, gripper_0_valid)
 
-    # Try gripper 90 deg sln first
-    if gripper_90_valid:
-        # Prevent self collision and hitting ground
-        if x_end_abs > 100 and y_end > -50:
-            print("Passed floor collision and env collision check")
+        all_valid = None
+
+        theta_list = None
+        
+        # Try gripper 90 deg sln first
+        if gripper_90_valid:
             psi = np.pi/2
 
             # Find pos at dynamixel 4
@@ -77,10 +79,13 @@ def inverse_kinematics(pose: Pose) -> JointState:
             y_4 = y_end + l4
             z_4 = z_end
 
+            dist_from_centre_4 = np.sqrt(x_4**2 + z_4**2)
+
+
             # Elbow up
-            c_theta_3 = (x_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
+            c_theta_3 = (dist_from_centre_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
             theta_3 = np.arctan2(-np.sqrt(1-c_theta_3), c_theta_3)
-            theta_2 = np.arctan2(y_4, x_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
+            theta_2 = np.arctan2(y_4, dist_from_centre_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
             theta_4 = -psi - theta_2 - theta_3
             theta_1 = np.arctan(z_4/x_4)
 
@@ -102,6 +107,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
                 theta_4 = -theta_4
                 theta_3 = -theta_3
                 theta_2 = -theta_2
+                theta_1 = -theta_1
 
 
             theta_list  = [theta_1, theta_2, theta_3, theta_4]
@@ -121,9 +127,8 @@ def inverse_kinematics(pose: Pose) -> JointState:
             if all_valid:
                 msg.position = theta_list
 
-    # Try gripper 0 pos
-    if (all_valid is None or all_valid is False) and gripper_0_valid:
-        if x_end_abs > 100 and y_end > -20:
+        # Try gripper 0 pos
+        if (all_valid is None or all_valid is False) and gripper_0_valid:
             print("Passed floor collision and env collision check")
             print("Trying 0")
             # Try gripper 0 position
@@ -134,14 +139,16 @@ def inverse_kinematics(pose: Pose) -> JointState:
             y_4 = y_end
             z_4 = z_end
 
+            dist_from_centre_4 = np.sqrt(x_4**2 + z_4**2)
+
             # Elbow up
-            c_theta_3 = (x_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
+            c_theta_3 = (dist_from_centre_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
             # IF x is negative, elbow up is +ve sln rather than negative
             if x_4 < 0:
                 theta_3 = np.arctan2(np.sqrt(1-c_theta_3), c_theta_3)
             elif x_4 > 0:
                 theta_3 = np.arctan2(-np.sqrt(1-c_theta_3), c_theta_3)
-            theta_2 = np.arctan2(y_4, x_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
+            theta_2 = np.arctan2(y_4, dist_from_centre_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
             theta_4 = -psi - theta_2 - theta_3
             theta_1 = np.arctan(z_4/x_4)
 
@@ -163,6 +170,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
                 theta_4 = -theta_4
                 theta_3 = -theta_3
                 theta_2 = -theta_2
+                theta_1 = -theta_1
 
             theta_list  = [theta_1, theta_2, theta_3, theta_4]
             # Check limits
@@ -185,16 +193,16 @@ def inverse_kinematics(pose: Pose) -> JointState:
             if all_valid:
                 msg.position = theta_list
 
-    if theta_list is None:
-        theta_list = [0, 0, - np.pi/2, np.pi/2]
-        msg.position = theta_list
-        success = 1
-    deg = []
-    for theta in theta_list:
-        deg.append(np.rad2deg(theta))
-    print(deg)
-    rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
-    pub.publish(msg)
+        if theta_list is None:
+            theta_list = [0, 0, - np.pi/2, np.pi/2]
+            msg.position = theta_list
+            success = 1
+        deg = []
+        for theta in theta_list:
+            deg.append(np.rad2deg(theta))
+        print(deg)
+        rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
+        pub.publish(msg)
 
     return success
 

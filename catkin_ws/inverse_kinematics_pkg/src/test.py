@@ -26,8 +26,11 @@ def inverse_kinematics(x, y, z):
     y_end = y- l1
     z_end = z 
 
+    dist_from_centre = np.sqrt(x_end **2 + z_end **2)
+
     # Prevent self collision and hitting ground
-    if x_end_abs > 100 and y_end > -45:
+    if (x_end > 80 or x_end < -45) and y_end > -50:
+
         print("Passed floor collision and env collision check")
 
         # Check reachable within workspace
@@ -43,10 +46,10 @@ def inverse_kinematics(x, y, z):
 
         gripper_0_valid = False
 
-        if x_end_abs < max_length_gripper_0:
+        if dist_from_centre < max_length_gripper_0:
             gripper_0_valid = True
 
-        if x_end_abs < max_length_gripper_90:
+        if dist_from_centre < max_length_gripper_90:
             gripper_90_valid = True
 
         print("Check max:", gripper_90_valid, gripper_0_valid)
@@ -62,10 +65,12 @@ def inverse_kinematics(x, y, z):
             y_4 = y_end + l4
             z_4 = z_end
 
+            dist_from_centre_4 = np.sqrt(x_4**2 + z_4**2)
+
             # Elbow up
-            c_theta_3 = (x_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
+            c_theta_3 = (dist_from_centre_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
             theta_3 = np.arctan2(-np.sqrt(1-c_theta_3), c_theta_3)
-            theta_2 = np.arctan2(y_4, x_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
+            theta_2 = np.arctan2(y_4, dist_from_centre_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
             theta_4 = -psi - theta_2 - theta_3
             theta_1 = np.arctan(z_4/x_4)
 
@@ -87,6 +92,7 @@ def inverse_kinematics(x, y, z):
                 theta_4 = -theta_4
                 theta_3 = -theta_3
                 theta_2 = -theta_2
+                theta_1 = -theta_1
 
 
             theta_list  = [theta_1, theta_2, theta_3, theta_4]
@@ -117,14 +123,16 @@ def inverse_kinematics(x, y, z):
             y_4 = y_end
             z_4 = z_end
 
+            dist_from_centre_4 = np.sqrt(x_4**2 + z_4**2)
+
             # Elbow up
-            c_theta_3 = (x_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
+            c_theta_3 = (dist_from_centre_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
             # IF x is negative, elbow up is +ve sln rather than negative
             if x_4 < 0:
                 theta_3 = np.arctan2(np.sqrt(1-c_theta_3), c_theta_3)
             elif x_4 > 0:
                 theta_3 = np.arctan2(-np.sqrt(1-c_theta_3), c_theta_3)
-            theta_2 = np.arctan2(y_4, x_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
+            theta_2 = np.arctan2(y_4, dist_from_centre_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
             theta_4 = -psi - theta_2 - theta_3
             theta_1 = np.arctan(z_4/x_4)
 
@@ -175,7 +183,7 @@ def inverse_kinematics(x, y, z):
 
 
 def main():
-   inverse_kinematics(250, 40, 0)
+   inverse_kinematics(250, 40, 50)
 
 if __name__ == '__main__':
     main()
