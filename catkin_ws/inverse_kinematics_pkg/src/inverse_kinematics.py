@@ -27,13 +27,6 @@ def inverse_kinematics(pose: Pose) -> JointState:
         # Specify joint names (see `controller_config.yaml` under `dynamixel_interface/config`)
         name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
     )
-
-    msg_adjust = JointState(
-        # Set header with current time
-        header=Header(stamp=rospy.Time.now()),
-        # Specify joint names (see `controller_config.yaml` under `dynamixel_interface/config`)
-        name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
-    )
     
     # mm link lengths (from cad)
     l1 = 75 
@@ -50,36 +43,36 @@ def inverse_kinematics(pose: Pose) -> JointState:
 
     dist_from_centre = np.sqrt(x_end **2 + z_end **2)
 
-    if (x_end > 80 or x_end < -45) and y_end > -50:
-        print("Passed floor collision and env collision check")
 
-        # Check reachable within workspace
-        # Gripper at 90 deg
-        max_length_gripper_90 = l2 + l3
 
-        # Gripper at 0 deg
-        max_length_gripper_0 = l2 + l4 + np.sqrt(l3**2 - l1**2)
+    # Check reachable within workspace
+    # Gripper at 90 deg
+    max_length_gripper_90 = l2 + l3
 
-        print("Max lengths", max_length_gripper_90, max_length_gripper_0)
+    # Gripper at 0 deg
+    max_length_gripper_0 = l2 + l4 + np.sqrt(l3**2 - l1**2)
 
-        gripper_90_valid = False
+    print("Max lengths", max_length_gripper_90, max_length_gripper_0)
 
-        gripper_0_valid = False
+    gripper_90_valid = False
 
-        if dist_from_centre < max_length_gripper_0:
-            gripper_0_valid = True
+    gripper_0_valid = False
 
-        if dist_from_centre < max_length_gripper_90:
-            gripper_90_valid = True
+    if dist_from_centre < max_length_gripper_0:
+        gripper_0_valid = True
 
-        print("Check max:", gripper_90_valid, gripper_0_valid)
+    if dist_from_centre < max_length_gripper_90:
+        gripper_90_valid = True
 
-        all_valid = None
+    print("Check max:", gripper_90_valid, gripper_0_valid)
 
-        theta_list = None
-        
-        # Try gripper 90 deg sln first
-        if gripper_90_valid:
+    all_valid = None
+
+    theta_list = None
+     # Try gripper 90 deg sln first
+    if gripper_90_valid:
+        if (x_end > 80 or x_end < -45) and y_end > -40:
+            print("Passed floor collision and env collision check")
             psi = np.pi/2
 
             # Find pos at dynamixel 4
@@ -135,13 +128,14 @@ def inverse_kinematics(pose: Pose) -> JointState:
             if all_valid:
                 msg.position = theta_list
 
-        # Try gripper 0 pos
-        if (all_valid is None or all_valid is False) and gripper_0_valid:
+    # Try gripper 0 pos
+    if (all_valid is None or all_valid is False) and gripper_0_valid:
+        if (x_end > 80 or x_end < -45) and y_end > -25:
             print("Passed floor collision and env collision check")
             print("Trying 0")
             # Try gripper 0 position
             psi = 0
-        
+
             # Find pos at dynamixel 4
             x_4 = x_end_abs - l4 - 16
             y_4 = y_end
@@ -199,26 +193,18 @@ def inverse_kinematics(pose: Pose) -> JointState:
                         break
             
             if all_valid:
-                theta_list_adjust = theta_list.copy()
-                theta_list_adjust[2] = theta_list_adjust[2] + np.deg2rad(30)
-                
                 msg.position = theta_list
-                msg_adjust.position = theta_list_adjust
 
-                print("Adjusting for 0 gripper pos \n")
-                pub.publish(msg_adjust)
-                time.sleep(3)
-
-        if theta_list is None:
-            theta_list = [0, 0, - np.pi/2, np.pi/2]
-            msg.position = theta_list
-            success = 1
-        deg = []
-        for theta in theta_list:
-            deg.append(np.rad2deg(theta))
-        print(deg)
-        rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
-        pub.publish(msg)
+    if theta_list is None:
+        theta_list = [0, 0, - np.pi/2, np.pi/2]
+        msg.position = theta_list
+        success = 1
+    deg = []
+    for theta in theta_list:
+        deg.append(np.rad2deg(theta))
+    print(deg)
+    rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
+    pub.publish(msg)
 
     return success
 
