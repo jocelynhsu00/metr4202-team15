@@ -141,15 +141,9 @@ def inverse_kinematics(pose: Pose) -> JointState:
             print("Trying 0")
             # Try gripper 0 position
             psi = 0
-
-            # Gripper collides with floor since joint 4 is set last
-            # First set gripper to 0 position at the desired pose but with a higher y
-            # to provide space for the gripper to move into 0 pos
-
-            # TODO: make a prelim x,y,z publish, wait, publish actual pos
         
             # Find pos at dynamixel 4
-            x_4 = x_end_abs - l4
+            x_4 = x_end_abs - l4 - 16
             y_4 = y_end
             z_4 = z_end
 
