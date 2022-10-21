@@ -6,6 +6,7 @@ Inverse kinematics
 # Always need this
 import rospy
 import math
+import time
 
 import numpy as np
 
@@ -21,6 +22,13 @@ def inverse_kinematics(pose: Pose) -> JointState:
 
     # Create message of type JointState
     msg = JointState(
+        # Set header with current time
+        header=Header(stamp=rospy.Time.now()),
+        # Specify joint names (see `controller_config.yaml` under `dynamixel_interface/config`)
+        name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
+    )
+
+    msg_adjust = JointState(
         # Set header with current time
         header=Header(stamp=rospy.Time.now()),
         # Specify joint names (see `controller_config.yaml` under `dynamixel_interface/config`)
@@ -134,6 +142,12 @@ def inverse_kinematics(pose: Pose) -> JointState:
             # Try gripper 0 position
             psi = 0
 
+            # Gripper collides with floor since joint 4 is set last
+            # First set gripper to 0 position at the desired pose but with a higher y
+            # to provide space for the gripper to move into 0 pos
+
+            # TODO: make a prelim x,y,z publish, wait, publish actual pos
+        
             # Find pos at dynamixel 4
             x_4 = x_end_abs - l4
             y_4 = y_end
@@ -191,7 +205,15 @@ def inverse_kinematics(pose: Pose) -> JointState:
                         break
             
             if all_valid:
+                theta_list_adjust = theta_list.copy()
+                theta_list_adjust[2] = theta_list_adjust[2] + np.deg2rad(30)
+                
                 msg.position = theta_list
+                msg_adjust.position = theta_list_adjust
+
+                print("Adjusting for 0 gripper pos \n")
+                pub.publish(msg_adjust)
+                time.sleep(3)
 
         if theta_list is None:
             theta_list = [0, 0, - np.pi/2, np.pi/2]

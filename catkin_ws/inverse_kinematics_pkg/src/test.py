@@ -174,16 +174,24 @@ def inverse_kinematics(x, y, z):
                         break
             
             if all_valid:
-               print("Using 0 deg")
+                theta_list_adjust = theta_list.copy()
+                theta_list_adjust[2] = theta_list_adjust[2] + np.deg2rad(30)
+                print("Using 0 deg")
 
         deg = []
+        deg_adjust = []
         for theta in theta_list:
             deg.append(np.rad2deg(theta))
+
+        for theta in theta_list_adjust:
+            deg_adjust.append(np.rad2deg(theta))
         print(deg)
+        print(deg_adjust)
+        print('hello')
 
 
 def main():
-   inverse_kinematics(250, 40, 50)
+   inverse_kinematics(250, 30, 0)
 
 if __name__ == '__main__':
     main()
