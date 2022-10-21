@@ -34,6 +34,8 @@ def inverse_kinematics(pose: Pose) -> JointState:
     l3 = 95 
     l4 = 85 
 
+    total_height = l1 + l2 + l3 + l4
+
     # End eff posiiton
     x_end = pose.position.x 
     x_end_abs = abs(pose.position.x)
@@ -71,7 +73,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
     theta_list = None
      # Try gripper 90 deg sln first
     if gripper_90_valid:
-        if (x_end > 80 or x_end < -45) and y_end > -40:
+        if (x_end > 80 or x_end < -45) and (y_end > -40 or y_end > total_height):
             print("Passed floor collision and env collision check")
             psi = np.pi/2
 
@@ -112,9 +114,11 @@ def inverse_kinematics(pose: Pose) -> JointState:
 
 
             theta_list  = [theta_1, theta_2, theta_3, theta_4]
+            # print("90 deg test", np.rad2deg(theta_list))
             # Check limits
             all_valid = True
             for index, theta in enumerate(theta_list):
+                print("90 deg theta:", index, np.rad2deg(theta))
                 # Check dynamixel limits (want to avoid going over -90, 90 deg as it damages the wiring)
                 if index != 3:
                     if theta < -np.deg2rad(140) or theta > np.deg2rad(140) or math.isnan(theta):
@@ -130,16 +134,20 @@ def inverse_kinematics(pose: Pose) -> JointState:
 
     # Try gripper 0 pos
     if (all_valid is None or all_valid is False) and gripper_0_valid:
-        if (x_end > 80 or x_end < -45) and y_end > -25:
+        if (x_end > 80 or x_end < -45) and (y_end > -25 or y_end > total_height):
             print("Passed floor collision and env collision check")
             print("Trying 0")
             # Try gripper 0 position
             psi = 0
 
             # Find pos at dynamixel 4
-            x_4 = x_end_abs - l4 - 16
+            # x_4 = x_end_abs - l4 - 26
             y_4 = y_end
-            z_4 = z_end
+            # z_4 = z_end
+
+            theta = np.arctan(z_end/x_end_abs)
+            x_4 = x_end_abs - l4 * np.cos(theta) - 40 * np.cos(theta)
+            z_4 = z_end - l4 * np.sin(theta) - 40 * np.sin(theta)
 
             dist_from_centre_4 = np.sqrt(x_4**2 + z_4**2)
 
@@ -196,7 +204,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
                 msg.position = theta_list
 
     if theta_list is None:
-        theta_list = [0, 0, - np.pi/2, np.pi/2]
+        theta_list = [0, np.deg2rad(40), np.deg2rad(-66), np.deg2rad(10)]
         msg.position = theta_list
         success = 1
     deg = []
