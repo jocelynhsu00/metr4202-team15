@@ -38,11 +38,12 @@ selected_block = 0
 getting_colour = False
 getting_pos = False
 
+
 #can ignore z offset because the camera is wonky and we just set it at a specific height each time
 Mcr = np.array([[0,1,0,0],
                 [0,0,-1,0],
                 [-1,0,0,0],
-                [-0.032,-0.165*140/30,0,1]]).T
+                [0,-0.21*140/30,0,1]]).T
 
     #Gripper code 
 
@@ -66,6 +67,7 @@ class Block:
         self.block_id = block_id
         self.theta = self.get_theta()
         self.r = np.sqrt((self.x-centre_x)**2+(self.y-centre_y)**2)
+        self.colour =None
 
 
 
@@ -88,6 +90,8 @@ class Block:
         self.z = z 
         self.theta = self.get_theta()
         self.r = np.sqrt((self.x-centre_x)**2+(self.y-centre_y)**2)
+        print("updating position")
+        print(self.get_block_id())
         return 0 
 
     def get_pos(self):
@@ -132,21 +136,50 @@ class Block:
 
     def grab_box(self):
         #reset()
+        wait_time = 3
+        hover_height = 32
+        self.y = 36
+        if np.sqrt(self.x **2 + self.z**2)> 212.5:
+            wait_time = 4
+            hover_height = 100
+            self.y = 51
+
         grip_open()
 
-        #test
+        #Preventing floor and block collision
         rospy.loginfo('Grab box')
         pose = Pose()
         pose.position.x = self.x
-        pose.position.y = self.y
+        pose.position.y = self.y + hover_height
         pose.position.z = self.z
+        self.pub.publish(pose)
+        print("hovering")
+        time.sleep(wait_time)
+        # grip_box()
+
+        pose.position.y = self.y
         #start at ready pos 
         self.pub.publish(pose)
-        time.sleep(3)
+        print("Grab")
+        print("Moving down")
+        time.sleep(2)
         grip_box()
 
+        pose.position.y = self.y + hover_height
+        #start at ready pos 
+        self.pub.publish(pose)
+        print("Moving up")
+        time.sleep(1)
+
     def set_colour(self, colour):
-        self.colour = colour
+        colour = str(colour).split('"')
+        if len(colour) < 2:
+            time.sleep(0.1)
+            print('waiting')
+        else:
+            print(colour)
+            colour = colour[1]
+            self.colour = str(colour)
 
     def dropoff_box(self):
         #chooses drop off position based on colour
@@ -154,8 +187,8 @@ class Block:
         #dropoff 2 = green
         #dropoff 3 = yellow
         #dropoff 4 = blue
-        self.colour = 'red'
-        print(self.colour)
+        #self.colour = 'red'
+        #print(self.colour)
 
         pose = Pose()
         if self.colour == 'red':
@@ -182,7 +215,7 @@ class Block:
         self.pub.publish(pose)
         time.sleep(3)
         
-        pose.position.y = 32
+        pose.position.y = 36
 
         self.pub.publish(pose)
         time.sleep(2)
@@ -241,8 +274,8 @@ def transform(x, y, z):
     robot_frame_x = (Pr[0] * 1000) * 30/140
     #robot_frame_y = Pr[1] * 100
     #block centre will always be 16mm off the ground and camera height finding is very poor
-    robot_frame_y = 32
-    robot_frame_z = (Pr[2] * 1000) * 30/140
+    robot_frame_y = 36
+    robot_frame_z = (Pr[2] * 1000) * 30/140         #was 30/140, changed to mess around a bit
     #robot_frame_theta = 
 
     return robot_frame_x, robot_frame_y, robot_frame_z 
@@ -263,8 +296,8 @@ def transform(x, y, z):
 
 def reset() :
     pose = Pose()
-    pose.position.x = 110
-    pose.position.y = 100
+    pose.position.x = 0
+    pose.position.y = 0
     pose.position.z = 0
     #start at ready pos 
     rospy.loginfo(f"sending desired pose {pose.position}")
@@ -323,7 +356,6 @@ def get_camera_list(data : String):
         curr_block = Block(x, y, z, curr_id)
         block_list.append(curr_block)
         print("created new block")
-        curr_block.grab_box()
         # id_list[0].grab_box()
     #test.publish(str(id_list))
 
@@ -398,22 +430,27 @@ def main():
     global block_list
     global getting_colour
     global getting_pos
+    loopstate1 = 0
     while(1):
-        
+        print("STARTING LOOP")
+        getting_pos = True
         if curr_state == 0 :
-            #decision making
-            reset()
-            getting_pos = True
-            print(block_list)
-            if block_list == []:
-                time.sleep(1)
-                continue
             print('State 0')
-            #print(camera_list())
-            # publish()
+            #decision making
+            if loopstate1 == 0:
+                loopstate1 = 1
+                reset()
 
-            selected_block = block_list[0]
-            curr_state += 1 
+            else:
+                time.sleep(1)
+                getting_pos = True
+                print(block_list)
+                if block_list == []:
+                
+                    continue
+                print('State 0')
+                selected_block = block_list[0]
+                curr_state += 1 
 
                     
         # Grabbing block
@@ -421,8 +458,10 @@ def main():
             getting_pos = False
             print("State 1")
             if selected_block == 0:
-                curr_state = 0
                 print("ERROR: state == 0")
+                curr_state = 0
+                loopstate1 = 0
+                
                 break
 
             selected_block.grab_box()
@@ -431,23 +470,27 @@ def main():
 
         # Show camera block colour
         if curr_state == 2 :
-            getting_pos = True
+            getting_pos = False
             print("State 2")
+            
             msg = JointState(
                 # Set header with current time
                 header=Header(stamp=rospy.Time.now()),
                 # Specify joint names (see `controller_config.yaml` under `dynamixel_interface/config`)
                 name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
             )
-
+            theta_list_mid = [0, 0, np.deg2rad(-66), np.deg2rad(10)]
+            msg.position = theta_list_mid
+            show_cam_pub.publish(msg)
+            time.sleep(2)
             theta_list = [0, np.deg2rad(-40), np.deg2rad(-59), np.deg2rad(-105)]
             print(theta_list)
             msg.position = theta_list
 
             show_cam_pub.publish(msg)
-            time.sleep(3)
+            time.sleep(3.5)
             getting_colour = True
-            time.sleep(1)
+            time.sleep(0.75)
             getting_colour = False
             
             curr_state += 1 
@@ -455,12 +498,13 @@ def main():
 
         #depositing block into drop off zones based on colour
         if curr_state == 3 :
-            getting_pos = True
+            getting_pos = False
             print("state 3")
             
             selected_block.dropoff_box()
-           
+            block_list.remove(selected_block)
 
+            loopstate1 = 0
             curr_state = 0
 
     rospy.spin()
