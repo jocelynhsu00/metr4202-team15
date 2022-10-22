@@ -56,7 +56,7 @@ Mcr = np.array([[0,1,0,0],
 
 # Gripper
 
-def grip_close():
+def grip_close():   
     """
     Closes the gripper
     """
