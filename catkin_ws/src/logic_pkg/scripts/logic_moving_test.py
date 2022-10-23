@@ -18,8 +18,8 @@ from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Pose
 
 # Drop off zone positions
-centre_x = 190
-centre_z = 0
+centre_x = 0
+centre_y = 0
 red_x = -41
 red_z = -140
 green_x = -140
@@ -197,17 +197,15 @@ class Block:
         self.x = x 
         self.y = y
         self.z = z
-        self.xlist = [1,2,3,4,5]
-        self.zlist = [1,2,3,4,5]
-        self.tlist = [1,2,3,4,5]
+        self.xlist = []
+        self.zlist = []
         self.block_id = block_id
         self.theta = self.get_theta()
-        self.r = np.sqrt((self.x-centre_x)**2+(self.z-centre_z)**2)
+        self.r = np.sqrt((self.x-centre_x)**2+(self.y-centre_y)**2)
         self.colour =None
         self.gripper_pos = -1
-        self.dont_get = False
+
         self.is_stationary = False
-        self.clockwise = True
 
         # Initialise Pose publisher (ikin subscribes to this)
         self.pub = rospy.Publisher(
@@ -244,7 +242,7 @@ class Block:
         self.y = y
         self.z = z 
         self.theta = self.get_theta()
-        self.r = np.sqrt((self.x-centre_x)**2+(self.z-centre_z)**2)
+        self.r = np.sqrt((self.x-centre_x)**2+(self.y-centre_y)**2)
         return 0
     
     def set_gripper_pos(self, gripper_pos):
@@ -271,16 +269,6 @@ class Block:
         """
         return self.gripper_pos
 
-    def get_dont_get(self):
-        
-        return self.dont_get
-
-
-    def set_dont_get(self, statement: bool):
-        self.dont_get = statement
-
-
-
     def get_pos(self):
         """
         Gets the blocks current position
@@ -304,16 +292,16 @@ class Block:
         Returns:
             (int): theta
         """
-        phi = np.absolute(np.arctan((self.z-centre_z)/(self.x-centre_x)))
+        phi = np.absolute(np.arctan((self.y-centre_y)/(self.x-centre_x)))
         if self.x > centre_x:
-            if self.z > centre_z:
+            if self.y > centre_y:
                 theta = phi
-            elif self.z < centre_z:
+            elif self.y < centre_y:
                 theta = 2*np.pi - phi
         elif self.x < centre_x:
-            if self.z > centre_z:
+            if self.y > centre_y:
                 theta = np.pi - phi
-            elif self.z < centre_z:
+            elif self.y < centre_y:
                 theta = np.pi + phi
         
         return theta
@@ -327,25 +315,12 @@ class Block:
 
         Returns:
             (int): omega
-
         """
-
-        phi = np.absolute(np.arctan((self.zlist[3] -centre_z)/(self.xlist[3]-centre_x)))
-        if self.x > centre_x:
-            if self.z > centre_z:
-                theta2 = phi
-            elif self.z < centre_z:
-                theta2 = 2*np.pi - phi
-        elif self.x < centre_x:
-            if self.z > centre_z:
-                theta2 = np.pi - phi
-            elif self.z < centre_z:
-                theta2 = np.pi + phi
-
         theta1 = self.get_theta()
-
+        time.sleep(3)
+        theta2 = self.get_theta()
         delta_theta = theta2 - theta1
-        omega = delta_theta/(self.tlist[4] - self.tlist[3])
+        omega = delta_theta/3
         return omega
     
     def predict_pos(self):
@@ -390,22 +365,13 @@ class Block:
             None
         """
         # Open gripper
-        global selected_block
         grip_open()
-
-        omega = self.get_omega()
-
-        #radius = abs(self.r)
-        if omega < 0:
-            radius = self.r
-        else:
-            radius = -self.r
 
         # Send end effector position to inv kin
         rospy.loginfo('Grab box')
         pose = Pose()
-        pose.position.x = centre_x
-        pose.position.z = radius
+        pose.position.x = self.x
+        pose.position.z = self.z
         wait_time = 4 
         self.y = 51
 
@@ -414,12 +380,23 @@ class Block:
         self.pub.publish(pose)
 
         # Give robot time to move to pose
-        time.sleep(wait_time)
+        time.sleep(1.5)
+
+        # Check gripper orientation
+        if self.get_gripper_pos() == 90:
+            pose.position.y = 36
+            self.pub.publish(pose)
+            time.sleep(0.5)
         
         # Close gripper
         grip_block()
-        time.sleep(0.1)
         
+
+        # Move up with block
+        pose.position.y = self.y + 100
+        # Send to i kin
+        self.pub.publish(pose)
+        time.sleep(0.5)
 
     def set_colour(self, colour):
         """
@@ -552,7 +529,6 @@ def get_camera_list(data : String):
         x = pos[0]
         y = pos[1]
         z = pos[2]
-        t = time.time()
 
         # Check the block position 5 times to determine if it is stationary
         if len(curr_block.xlist) >= x_z_list_length:
@@ -563,24 +539,22 @@ def get_camera_list(data : String):
             curr_block.zlist.remove(curr_block.zlist[0])
         curr_block.zlist.append(z)
 
-        if len(curr_block.tlist) >= 5:
-            curr_block.tlist.remove(curr_block.tlist[0])
-        curr_block.tlist.append(t)
-
         # Checks if the blocks are stationary
-        # if len(curr_block.xlist) >= x_z_list_length:
-        #     x_diff = sum(curr_block.xlist)/x_z_list_length
-        #     z_diff = sum(curr_block.zlist)/x_z_list_length
+        if len(curr_block.xlist) >= x_z_list_length:
+            x_diff = sum(curr_block.xlist)/x_z_list_length
+            z_diff = sum(curr_block.zlist)/x_z_list_length
 
         # Checks to make sure the distance difference is outside of expected error
-        error_diff = 1.02
-        if 180 < curr_block.get_theta() < 360:
-            curr_block.set_dont_get(True)
-        else:
-            curr_block.set_dont_get(False)
-
-
-
+            error_diff = 1.02
+            if abs(x) <= abs(x_diff) * error_diff:
+                print('no difference in x')
+                if abs(z) <= abs(z_diff) * error_diff:
+                    print('no difference in z')
+                    curr_block.set_stationary(True)
+                else:
+                    curr_block.set_stationary(False)
+            else:
+                curr_block.set_stationary(False)
 
         # Update block position
         curr_block.update_pos(x, y, z)
@@ -676,24 +650,19 @@ def main():
                 # Move onto grab block if the block is stationary
                 curr_state += 1 
 
-
         # GRAB BLOCK STATE
         if curr_state == 1:
             print("State 1")
 
-            for block in block_list :
-                if block.get_theta() < selected_block.get_theta() :
-                    selected_block = block
-
             # Do not update position while grabbing block
-            getting_pos = False
+            getting_pos = True
             if selected_block == 0:
                 print("ERROR: state == 0")
                 curr_state = 0
                 loop_state_1 = 0
                 break
 
-            # Check if blocks are too close together
+            # # Check if blocks are too close together
             # for index, block in enumerate(block_list):
             #     too_close = False
             #     for i, b in enumerate(block_list):
@@ -706,22 +675,13 @@ def main():
             #         if distance <= 40 and np.abs(block.r-b.r) <= 32:
             #             too_close = True
                 
-            #     # Grab the closest valid block
-            #     if block.r < selected_block.r and too_close == False:
-            #         selected_block = block
-            
+                # Grab the closest valid block
+                if block.r < selected_block.r and too_close == False:
+                    selected_block = block
 
-            #Iterate to find block closest to 90 degrees
-
-    
             # Grab block and move onto next state
-            if selected_block.get_dont_get() == True:
-                curr_state = 0
-                loop_state_1 = 0
-                continue
-            else:
-                selected_block.grab_block()
-                curr_state += 1
+            selected_block.grab_block()
+            curr_state += 1
 
         # CHECK COLOUR STATE
         if curr_state == 2:

@@ -1,39 +1,40 @@
 # METR4202 REPO
 
-Branches:
+## Dependencies
+-fiducial_msgs
 
-logic: logic + state machine, deciding which blocks to pick up, obstacle avoidance, predicting block position, deciding which scripts to call
+-geometry_msgs
 
-controller: publishing to dynamixels: given in wk7 UQ-METR4202 code
+-rospy
 
-camera: reading where the blocks are, provide position of block to logic to decide an end effector position
+-sensor_msgs
 
-inverse_kinematics: inv kin, compare to for kin, provide 2 solutions for joint angles given an end effector position
+-std_msgs
 
-gripper: open close gripper (given in prac code, call when robot has moved to supplied end effector position)
+## Steps to run
+Open terminal
+'''
+cd METR4202/catkin_ws
 
+git checkout main
 
+git pull
 
-## REMINDERS: 
-Do not commit to main for now, please commit to your branch
+catkin build
 
-Keep commits when merging after pull request
+source devel/setup.bash
 
-### Branch names: controller, inverse_kinematics, forward_kinematics, camera, gripper
-
-### Git commands:
-
-git checkout "insert branch name"
-
-git clone insert link: to clone a repo 
-
-git pull: to pull new changes
-
-git status: to see modifications
-
-git add insert path/file_name: to add a file to be committed
-
-git commit -m "insert commit msg": to stage a commit
-
-git push: to push the commit 
-
+usb
+'''
+### For stationary pickup
+'''
+roslaunch demo_pkg stationary.launch
+'''
+### For moving pickup
+'''
+roslaunch demo_pkg moving.launch
+'''
+### For throwing the block
+'''
+roslaunch demo_pkg yeet.launch
+'''
