@@ -124,12 +124,15 @@ def reset():
     time.sleep(1)
     return 0
 
-def get_gripper_pos(position : Int16):
+def get_gripper_pos(data: String):
     """
     Subscribes to gripper_pos topic to determine if 90 or 0 is used
     """
-    global gripper_pos 
-    gripper_pos = position
+    global selected_block
+    gripper_pos_list = str(data).split('"')
+    gripper_pos= int(gripper_pos_list[1])
+    selected_block.set_gripper_pos(gripper_pos)
+    
 
 
 class Block:
@@ -156,9 +159,9 @@ class Block:
         self.theta = self.get_theta()
         self.r = np.sqrt((self.x-centre_x)**2+(self.y-centre_y)**2)
         self.colour =None
+        self.gripper_pos = -1
 
         self.is_stationary = False
-
 
         # Initialise Pose publisher (ikin subscribes to this)
         self.pub = rospy.Publisher(
@@ -192,7 +195,13 @@ class Block:
         self.r = np.sqrt((self.x-centre_x)**2+(self.y-centre_y)**2)
         print("Updating position")
         print(self.get_block_id())
-        return 0 
+        return 0
+    
+    def set_gripper_pos(self, gripper_pos):
+        self.gripper_pos = gripper_pos
+
+    def get_gripper_pos(self):
+        return self.gripper_pos
 
     def get_pos(self):
         """
@@ -216,6 +225,7 @@ class Block:
                 theta = np.pi - phi
             elif self.y < centre_y:
                 theta = np.pi + phi
+        
         return theta
     
     def get_omega(self):
@@ -247,21 +257,53 @@ class Block:
         return(d)
 
 
+    # def grab_block(self):
+    #     """
+    #     Grabbing the block 
+    #     """
+
+
+    #     # Open gripper
+    #     grip_open()
+
+    #     # Hover above block
+    #     # Preventing floor and block collision
+    #     rospy.loginfo('Grab box')
+    #     pose = Pose()
+    #     pose.position.x = self.x
+    #     pose.position.y = 100
+    #     pose.position.z = self.z
+
+    #     self.pub.publish(pose)
+
+    #     if self.get_gripper_pos() == 90:
+    #         # Update wait time, hover height and y position
+    #         wait_time = 3  #4
+    #         self.y = 36
+    #     else:
+    #         wait_time = 4 #3
+    #         self.y = 51
+    #     #go for actual block after knowing what pos it is using
+    #     pose.position.y = self.y
+    #     time.sleep(wait_time)
+    #     self.pub.publish(pose)
+        
+    #     time.sleep(4)
+    #     grip_block()
+        
+
+    #     # Move up with block
+    #     pose.position.y = self.y + 100
+    #     #start at ready pos 
+    #     self.pub.publish(pose)
+    #     print("Moving up")
+    #     time.sleep(1)
+
     def grab_block(self):
         """
         Grabbing the block 
         """
-        # Set a desired wait time
-        wait_time = 2.5 #3
-        hover_height = 32
-        self.y = 36
 
-        # If the block is far enough away, it will use gripper parallel to ground
-        if np.sqrt(self.x **2 + self.z**2)> 212.5:
-            # Update wait time, hover height and y position
-            wait_time = 3.5   #4
-            hover_height = 100
-            self.y = 51
 
         # Open gripper
         grip_open()
@@ -271,22 +313,33 @@ class Block:
         rospy.loginfo('Grab box')
         pose = Pose()
         pose.position.x = self.x
-        pose.position.y = self.y + hover_height
+        #pose.position.y = 100
         pose.position.z = self.z
-        self.pub.publish(pose)
-        print("hovering")
-        time.sleep(wait_time)
 
-        # Move down and grab block
+        #self.pub.publish(pose)
+
+        # if self.get_gripper_pos() == 90:
+        #     # Update wait time, hover height and y position
+        #     wait_time = 3  #4
+        #     self.y = 36
+        wait_time = 4 #3
+        self.y = 51
+        #go for actual block after knowing what pos it is using
         pose.position.y = self.y
+        #time.sleep(wait_time)
         self.pub.publish(pose)
-        print("Grab")
-        print("Moving down")
-        time.sleep(0.9)
+        time.sleep(4)
+        if self.get_gripper_pos() == 90:
+            pose.position.y = 36
+            self.pub.publish(pose)
+            time.sleep(1)
+        
         grip_block()
+        
+        
 
         # Move up with block
-        pose.position.y = self.y + hover_height
+        pose.position.y = self.y + 100
         #start at ready pos 
         self.pub.publish(pose)
         print("Moving up")
@@ -431,7 +484,7 @@ def get_camera_list(data : String):
 
 
         # checks to make sure diff of each is less than error_diff
-        error_diff = 10
+        error_diff = 25
         if x_diff <= error_diff:
             print('no difference in x')
             if z_diff <= error_diff:
@@ -472,6 +525,7 @@ def main():
     global block_list
     global getting_colour
     global getting_pos
+
     
     loopstate1 = 0
     curr_state = 0
@@ -506,16 +560,18 @@ def main():
         get_camera_list # Callback function (required)
     )
 
-    # sub_gripper_pos = rospy.Subscriber(
-    #     'gripper_pos',
-    #     Int16,
-    #     get_gripper_pos
-    # )
-    # print(gripper_pos)
+    sub_gripper_pos = rospy.Subscriber(
+        'gripper_pos',
+        String,
+        get_gripper_pos
+    )
+
  
     # State machine
     while(1):
         print("STARTING STATE MACHINE")
+        # print("Gripper pos", gripper_pos)
+        #gripper_pub.publish(gripper_pos)
 
         if curr_state == 0:
             # Determine if block has been detected
@@ -523,7 +579,7 @@ def main():
             if loopstate1 == 0:
                 loopstate1 = 1
                 reset()
-                time.sleep(1)
+                time.sleep(0.5)
 
             else:
                 #time.sleep(1)
@@ -548,9 +604,18 @@ def main():
                 loopstate1 = 0
                 
                 break
+            for index, block in enumerate(block_list):
+                too_close = False
+                for i, b in enumerate(block_list):
+                    if i == index:
+                        continue
+                    distance = np.sqrt(block.r**2+b.r**2-2*block.r*b.r*np.cos(np.abs(block.theta-b.theta)))
+                    if distance <= 40 and np.abs(block.r-b.r) <= 32:
+                        too_close = True
+                if block.r < selected_block.r and too_close == False:
+                    selected_block = block
 
             selected_block.grab_block()
-
             curr_state += 1
 
         # Show camera block colour
@@ -585,6 +650,7 @@ def main():
         if curr_state == 3 :
             getting_pos = False
             print("state 3")
+            
             
             selected_block.dropoff_box()
             block_list.remove(selected_block)

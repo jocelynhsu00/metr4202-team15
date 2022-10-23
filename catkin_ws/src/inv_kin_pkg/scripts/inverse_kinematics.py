@@ -11,7 +11,7 @@ import time
 import numpy as np
 
 # Import message types
-from std_msgs.msg import Header, Int16
+from std_msgs.msg import Header, String
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Pose
 
@@ -154,8 +154,8 @@ def inverse_kinematics(pose: Pose) -> JointState:
             # z_4 = z_end
 
             theta = np.arctan(z_end/x_end_abs)
-            x_4 = x_end_abs - l4 * np.cos(theta) - 20*np.cos(theta)
-            z_4 = z_end - l4 * np.sin(theta) - 20*np.sin(theta)
+            x_4 = x_end_abs - l4 * np.cos(theta) - 22*np.cos(theta)
+            z_4 = z_end - l4 * np.sin(theta) - 22*np.sin(theta)
 
             dist_from_centre_4 = np.sqrt(x_4**2 + z_4**2)
 
@@ -221,8 +221,9 @@ def inverse_kinematics(pose: Pose) -> JointState:
         deg.append(np.rad2deg(theta))
     print(deg)
     rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
+    msg.velocity = 2.0
     pub_pose.publish(msg)
-    pub_gripper_pos.publish(gripper_pos)
+    pub_gripper_pos.publish(str(gripper_pos))
 
     return success
 
@@ -239,7 +240,7 @@ def main():
 
     pub_gripper_pos = rospy.Publisher(
         'gripper_pos', # Topic name
-        Int16, # Message type
+        String, # Message type
         queue_size=10 # Topic size (optional)
     )
 

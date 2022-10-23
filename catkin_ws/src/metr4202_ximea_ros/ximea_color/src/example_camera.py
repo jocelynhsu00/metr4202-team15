@@ -16,7 +16,7 @@ class CameraViewer:
     self.serial = serial
     self.image_sub = rospy.Subscriber(f"/ximea_ros/ximea_{self.serial}/image_raw", Image, self.callback)
     self.color_pub = rospy.Publisher("/colour_string", String, queue_size=10)
-
+  
   def callback(self,data):
     global img
     try:
@@ -29,6 +29,11 @@ class CameraViewer:
     color.r = bgr[2]
     color.g = bgr[1]
     color.b = bgr[0]
+    # imagecam = img.copy()
+    # cv2.circle(imagecam, (imagecam.shape[1] // 2, imagecam.shape[0] // 2), 1, (0, 0, 255), -1)
+    # cv2.imshow('camera_window', imagecam)
+    # cv2.waitKey(1)
+
     print(color)
 
     if color.r >= 250 and color.g >=215:

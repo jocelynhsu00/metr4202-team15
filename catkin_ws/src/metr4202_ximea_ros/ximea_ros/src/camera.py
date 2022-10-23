@@ -10,9 +10,9 @@ import rospy
 import numpy as np
 
 # Import message types
-from fiducial_msgs.msg import Fiducial, FiducialTransform, FiducialTransformArray
+from fiducial_msgs.msg import Fiducial, FiducialTransform, FiducialTransformArray, FiducialArray
 from geometry_msgs.msg import TransformStamped
-from std_msgs.msg import String
+from std_msgs.msg import String, Int16
 import tf2_ros
 import tf
 
@@ -52,12 +52,21 @@ def transform_callback(data) -> String:
         print(id)
         trans = m.transform.translation
         rot = m.transform.rotation
-        trans.x = trans.x + .02404*np.sin(np.pi/4+rot.z)
-        trans.y = trans.y + .02404*np.cos(np.pi/4+rot.z)
+        #trans.x = trans.x + .02404*np.sin(np.pi/4-rot.x*np.pi)
+        #trans.y = trans.y + .02404*np.cos(np.pi/4-rot.x*np.pi)
         #Cameralist = [id, trans.x, trans.y, trans.z, rot.x, rot.y, rot.z, rot.w]
         Cameralist = str(f"{id},{trans.x},{trans.y},{trans.z},{rot.x},{rot.y},{rot.z},{rot.w}")
 
         pub.publish(Cameralist)
+
+# def vertices_callback(data):
+#     for i in data.fiducials:
+#         print(i.x)
+
+
+    #print(vertex_list[0])
+
+
     #return Cameralist
 
         # t = TransformStamped()
@@ -131,7 +140,9 @@ def main():
 
     # Initialise node with any node name
     rospy.init_node('listener', anonymous = True)
-    rospy.Subscriber('/fiducial_transforms', FiducialTransformArray, transform_callback)
+    transformsub = rospy.Subscriber('/fiducial_transforms', FiducialTransformArray, transform_callback)
+
+    # centresub = rospy.Subscriber('/fiducial_vertices', FiducialArray, vertices_callback)
 
 
 

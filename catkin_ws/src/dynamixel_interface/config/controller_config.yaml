@@ -9,13 +9,13 @@ loop_rate: 100                    # desired rate for joint state updates. actual
                                   # of dynamixels connected and port baud rate.
 control_mode: position            # control mode, either 'position', 'velocity', or 'effort'
 disable_torque_on_shutdown: true  # with this enabled the motors will switch off when the controller closes
-ignore_input_velocity: true      # ignore input velocity commands in position mode (no profile velocity)
+ignore_input_velocity: false      # ignore input velocity commands in position mode (no profile velocity)
 diagnostics_rate: 1               # rate to publish diagnostic information
 dataport_rate: 1                  # rate to read from dynamixel external dataports
 recv_queue_size: 1                # receive queue size for desired_joint_states topic
 # The below values are used as global defaults and are applied for each servo unless overridden in the entry for
 # the servo below
-global_max_vel: 1.0               # maximum joint speed (rad/s) (in position or velocity control)
+global_max_vel: 2.0              # maximum joint speed (rad/s) (in position or velocity control)
 global_torque_limit: 1.0          # maximum motor torque for all modes, given as a fraction of rated max (0-1)
 
 # # --------------------------------------------------------------------------- # #
