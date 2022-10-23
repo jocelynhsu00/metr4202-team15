@@ -25,6 +25,11 @@ yeet_z = 100
 yeet_x_throw = -200
 yeet_z_throw = -100
 
+yeet_blue = -16.3
+yeet_green = 30
+yeet_yellow = -30
+yeet_red = 16.3
+
 #list length for x and z stop. 
 x_z_list_length = 5
 
@@ -362,75 +367,49 @@ class Block:
             colour = colour[1]
             self.colour = str(colour)
 
-    # def dropoff_box(self):
-    #     """
-    #     Drops of block based on colour
-    #     """
-    #     # Create a pose object
+    def yeet_box(self):
+        """
+        Throws a block based on colour
+        """
 
-    #     # Set pose based on colour
-    #     pose = Pose()
-    #     self.colour = 'green'
-    #     if self.colour == 'red':
-    #         pose.position.x = red_x
-    #         pose.position.z = red_z
+        msg = JointState(
+        # Set header with current time
+        header=Header(stamp=rospy.Time.now()),
+        # Specify joint names (see `controller_config.yaml` under `dynamixel_interface/config`)
+        name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
+            )
 
-    #     elif self.colour == 'green':
-    #         pose.position.x = green_x
-    #         pose.position.z = green_z
+        # Create a pose object
 
-    #     elif self.colour == 'yellow':
-    #         pose.position.x = yellow_x
-    #         pose.position.z = yellow_z
+        # Set pose based on colour
+        theta_1 = 0
+        pose = Pose()
 
-    #     elif self.colour == 'blue':
-    #         pose.position.x = blue_x
-    #         pose.position.z = blue_z
+        if self.colour == 'red':
+            theta_1 = yeet_red
 
-    #     else:
-    #         return(1)
-    #     # Hover above drop off zone
-    #     #pose.position.y = 100
+        elif self.colour == 'green':
+            theta_1 = yeet_green
 
-    #     #self.pub.publish(pose)
-    #     #time.sleep(3)
-        
-    #     # Move down
-    #     pose.position.y = 36
+        elif self.colour == 'yellow':
+            theta_1 = yeet_yellow
 
-    #     self.pub.publish(pose)
-    #     time.sleep(0.25)
+        elif self.colour == 'blue':
+            theta_1 = yeet_blue
+        else:
+            return(1)
 
-    #     # Drop off block
-    #     grip_open()
-    #     time.sleep(0.3)
+        theta_list_mid = [np.deg2rad(theta_1), np.deg2rad(-90), 0, 0]
+        msg.position = theta_list_mid
+        show_cam_pub.publish(msg)
+        time.sleep(3)
 
-
-    #     # #block predict pos 
-    #     # pose.position.x, pose.position.y = block.predict_pos()
-    #     # pose.position.y = pose.position.y + 20
-
-    #     # #move to predicted pos 
-
-    #     # #maybe wait for box to move underneath
-
-    #     # #move down 
-    #     # pose.position.y = pose.position.y - 20
-
-        
-    #     # #gripbox
-    #     # grip_block()
-    #     # #move up
-    #     # pose.position.y = pose.position.y + 20
-        
-    #     # pub.publish()
-    #     # #move to dropoff zone
-    #     # pose.position.x = 0
-    #     # pose.position.y = 0
-    #     # pose.position.z = 0
-    #     # #gripopen
-    #     # grip_open()
-    #     #reset to ready position \
+        theta_list_mid = [np.deg2rad(-30), np.deg2rad(-45), np.deg2rad(45), 0]
+        msg.position = theta_list_mid
+        show_cam_pub.publish(msg)
+        time.sleep(0.4)
+        grip_open()
+        time.sleep(3)
     def set_stationary(self, stationary: bool):
         self.is_stationary = stationary
 
@@ -634,33 +613,30 @@ def main():
         if curr_state == 2 :
             getting_pos = False
             print("State 2")
-            
+
             msg = JointState(
-                # Set header with current time
-                header=Header(stamp=rospy.Time.now()),
-                # Specify joint names (see `controller_config.yaml` under `dynamixel_interface/config`)
-                name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
-            )
-            # theta_list_mid = [0, 0, np.deg2rad(-66), np.deg2rad(10)]
-            # msg.position = theta_list_mid
-            # show_cam_pub.publish(msg)
-            # #time.sleep(2)
-            # theta_list = [0, np.deg2rad(-35), np.deg2rad(-55), np.deg2rad(-100)]
-            # print(theta_list)
-            # msg.position = theta_list
+            # Set header with current time
+            header=Header(stamp=rospy.Time.now()),
+            # Specify joint names (see `controller_config.yaml` under `dynamixel_interface/config`)
+            name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
+                )
 
-            # show_cam_pub.publish(msg)
-            # time.sleep(1.5)
-            # getting_colour = True
-            # time.sleep(0.1)
+            
+            
+            theta_list_mid = [0, 0, np.deg2rad(-66), np.deg2rad(10)]
+            msg.position = theta_list_mid
+            show_cam_pub.publish(msg)
+            #time.sleep(2)
+            theta_list = [0, np.deg2rad(-35), np.deg2rad(-55), np.deg2rad(-100)]
+            print(theta_list)
+            msg.position = theta_list
+
+            show_cam_pub.publish(msg)
+            time.sleep(1.5)
+            getting_colour = True
+            time.sleep(0.1)
             getting_colour = False
-            pose = Pose()
-            pose.position.x = yeet_x
-            pose.position.y = 55
-            pose.position.z = yeet_z
-            selected_block.pub.publish(pose)
-            time.sleep(3)
-
+            selected_block.yeet_box()
             curr_state += 1 
 
 
@@ -668,17 +644,13 @@ def main():
         if curr_state == 3 :
             getting_pos = False
             print("state 3")
-            theta_list_mid = [np.deg2rad(30), 0, 0, 0]
-            msg.position = theta_list_mid
-            show_cam_pub.publish(msg)
-            time.sleep(0.3)
             
             # selected_block.dropoff_box()
             block_list.remove(selected_block)
 
             loopstate1 = 0
             curr_state = 0
-            grip_open()
+
 
 
     rospy.spin()
