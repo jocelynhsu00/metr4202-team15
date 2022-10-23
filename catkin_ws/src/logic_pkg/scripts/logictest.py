@@ -29,6 +29,10 @@ yellow_z = 50
 blue_x = -41
 blue_z = 140
 
+#list length for x and z stop. 
+x_z_list_length = 5
+
+
 # Set pwm for servo
 rpi = pigpio.pi()
 rpi.set_mode(18, pigpio.OUTPUT)
@@ -155,6 +159,8 @@ class Block:
         self.x = x 
         self.y = y
         self.z = z
+        self.xlist = []
+        self.zlist = []
         self.block_id = block_id
         self.theta = self.get_theta()
         self.r = np.sqrt((self.x-centre_x)**2+(self.y-centre_y)**2)
@@ -328,11 +334,11 @@ class Block:
         pose.position.y = self.y
         #time.sleep(wait_time)
         self.pub.publish(pose)
-        time.sleep(4)
+        time.sleep(1.5)
         if self.get_gripper_pos() == 90:
             pose.position.y = 36
             self.pub.publish(pose)
-            time.sleep(1)
+            time.sleep(0.5)
         
         grip_block()
         
@@ -343,7 +349,7 @@ class Block:
         #start at ready pos 
         self.pub.publish(pose)
         print("Moving up")
-        time.sleep(1)
+        time.sleep(0.5)
 
     def set_colour(self, colour):
         """
@@ -397,7 +403,7 @@ class Block:
         pose.position.y = 36
 
         self.pub.publish(pose)
-        time.sleep(2.6)
+        time.sleep(1.3)
 
         # Drop off block
         grip_open()
@@ -473,27 +479,34 @@ def get_camera_list(data : String):
         y = pos[1]
         z = pos[2]
 
-        # checks if they are similar so it knows its stopped
-        #TODO
-        x_prev = curr_block.get_pos()[0]
-        z_prev = curr_block.get_pos()[2]
 
-        x_diff = abs(x_prev - x) * 1000
-        z_diff = abs(z_prev - z) * 1000
+        if len(curr_block.xlist) >= x_z_list_length:
+            curr_block.xlist.remove(curr_block.xlist[0])
+        curr_block.xlist.append(x)
+
+        if len(curr_block.zlist) >= x_z_list_length:
+            curr_block.zlist.remove(curr_block.zlist[0])
+        curr_block.zlist.append(z)
+
+
+        # checks if they are similar so it knows its stopped
+        if len(curr_block.xlist) >= x_z_list_length:
+            x_diff = sum(curr_block.xlist)/x_z_list_length
+            z_diff = sum(curr_block.zlist)/x_z_list_length
 
 
 
         # checks to make sure diff of each is less than error_diff
-        error_diff = 25
-        if x_diff <= error_diff:
-            print('no difference in x')
-            if z_diff <= error_diff:
-                print('no difference in z')
-                curr_block.set_stationary(True)
+            error_diff = 1.02
+            if abs(x) <= abs(x_diff) * error_diff:
+                print('no difference in x')
+                if abs(z) <= abs(z_diff) * error_diff:
+                    print('no difference in z')
+                    curr_block.set_stationary(True)
+                else:
+                    curr_block.set_stationary(False)
             else:
                 curr_block.set_stationary(False)
-        else:
-            curr_block.set_stationary(False)
 
 
         curr_block.update_pos(x, y, z)
@@ -507,9 +520,12 @@ def get_camera_list(data : String):
         x = pos[0]
         y = pos[1]
         z = pos[2]
+        #for finding if stopped
 
         curr_block = Block(x, y, z, curr_id)
         block_list.append(curr_block)
+        curr_block.listx = [x]
+        curr_block.listz = [z]
         print("created new block")
         # id_list[0].grab_block()
     #test.publish(str(id_list))
@@ -633,12 +649,12 @@ def main():
             msg.position = theta_list_mid
             show_cam_pub.publish(msg)
             #time.sleep(2)
-            theta_list = [0, np.deg2rad(-40), np.deg2rad(-59), np.deg2rad(-105)]
+            theta_list = [0, np.deg2rad(-35), np.deg2rad(-55), np.deg2rad(-100)]
             print(theta_list)
             msg.position = theta_list
 
             show_cam_pub.publish(msg)
-            time.sleep(3.5)
+            time.sleep(1.5)
             getting_colour = True
             time.sleep(0.1)
             #getting_colour = False
