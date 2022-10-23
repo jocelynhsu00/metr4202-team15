@@ -1,0 +1,10 @@
+metr4202_ximea_ros/ximea_ros
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_ros/cmake.lock /home/metr4202-team15/METR4202/catkin_ws/devel/./cmake.lock
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_ros/lib/libximea_ros.so /home/metr4202-team15/METR4202/catkin_ws/devel/lib/libximea_ros.so
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_ros/lib/libximea_cv.so /home/metr4202-team15/METR4202/catkin_ws/devel/lib/libximea_cv.so
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_ros/lib/ximea_ros/cmake.lock /home/metr4202-team15/METR4202/catkin_ws/devel/lib/ximea_ros/cmake.lock
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_ros/lib/ximea_ros/ximea_demo /home/metr4202-team15/METR4202/catkin_ws/devel/lib/ximea_ros/ximea_demo
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_ros/lib/ximea_ros/camera.py /home/metr4202-team15/METR4202/catkin_ws/devel/lib/ximea_ros/camera.py
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_ros/lib/pkgconfig/ximea_ros.pc /home/metr4202-team15/METR4202/catkin_ws/devel/lib/pkgconfig/ximea_ros.pc
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_ros/share/ximea_ros/cmake/ximea_rosConfig-version.cmake /home/metr4202-team15/METR4202/catkin_ws/devel/share/ximea_ros/cmake/ximea_rosConfig-version.cmake
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_ros/share/ximea_ros/cmake/ximea_rosConfig.cmake /home/metr4202-team15/METR4202/catkin_ws/devel/share/ximea_ros/cmake/ximea_rosConfig.cmake

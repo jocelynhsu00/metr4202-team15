@@ -1,0 +1,10 @@
+[01m[K/home/metr4202-team15/METR4202/catkin_ws/src/metr4202_ximea_ros/ximea_ros/src/ximea_cv.cpp:[m[K In member function ‘[01m[Kvoid xiAPIplusCameraOcv::resetCvImage_()[m[K’:
+[01m[K/home/metr4202-team15/METR4202/catkin_ws/src/metr4202_ximea_ros/ximea_ros/src/ximea_cv.cpp:11706:19:[m[K [01;35m[Kwarning: [m[Kpassing NULL to non-pointer argument 1 of ‘[01m[Kcv::Scalar_<_Tp>::Scalar_(_Tp) [with _Tp = double][m[K’ [[01;35m[K-Wconversion-null[m[K]
+11706 |   cv_mat_image_ = [01;35m[KNULL[m[K;
+      |                   [01;35m[K^~~~[m[K
+In file included from [01m[K/usr/include/opencv4/opencv2/core.hpp:58[m[K,
+                 from [01m[K/home/metr4202-team15/METR4202/catkin_ws/src/metr4202_ximea_ros/ximea_ros/include/ximea_cv/ximea_cv.hpp:7[m[K,
+                 from [01m[K/home/metr4202-team15/METR4202/catkin_ws/src/metr4202_ximea_ros/ximea_ros/src/ximea_cv.cpp:1[m[K:
+[01m[K/usr/include/opencv4/opencv2/core/types.hpp:2207:27:[m[K [01;36m[Knote: [m[K  declared here
+ 2207 | Scalar_<_Tp>::Scalar_([01;36m[K_Tp v0[m[K)
+      |                       [01;36m[K~~~~^~[m[K

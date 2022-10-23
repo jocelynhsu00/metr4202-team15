@@ -1,0 +1,1 @@
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_ros/share/ximea_ros/cmake/ximea_rosConfig-version.cmake

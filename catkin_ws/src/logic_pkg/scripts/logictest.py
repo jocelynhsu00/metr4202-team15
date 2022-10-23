@@ -12,8 +12,6 @@ import time
 import pigpio
 from soupsieve import select
 import rospy
-# import inverse_kinematics as inkin
-from inverse_kinematics import *
 
 from std_msgs.msg import Header, String, Int16
 from sensor_msgs.msg import JointState

@@ -1,0 +1,1 @@
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/dynamixel_interface/share/common-lisp/ros/dynamixel_interface/msg/ServoDiags.lisp

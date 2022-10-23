@@ -1,0 +1,7 @@
+logic_pkg
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/logic_pkg/cmake.lock /home/metr4202-team15/METR4202/catkin_ws/devel/./cmake.lock
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/logic_pkg/lib/pkgconfig/logic_pkg.pc /home/metr4202-team15/METR4202/catkin_ws/devel/lib/pkgconfig/logic_pkg.pc
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/logic_pkg/lib/logic_pkg/logictest.py /home/metr4202-team15/METR4202/catkin_ws/devel/lib/logic_pkg/logictest.py
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/logic_pkg/lib/logic_pkg/cmake.lock /home/metr4202-team15/METR4202/catkin_ws/devel/lib/logic_pkg/cmake.lock
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/logic_pkg/share/logic_pkg/cmake/logic_pkgConfig.cmake /home/metr4202-team15/METR4202/catkin_ws/devel/share/logic_pkg/cmake/logic_pkgConfig.cmake
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/logic_pkg/share/logic_pkg/cmake/logic_pkgConfig-version.cmake /home/metr4202-team15/METR4202/catkin_ws/devel/share/logic_pkg/cmake/logic_pkgConfig-version.cmake

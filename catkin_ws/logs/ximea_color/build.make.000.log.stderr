@@ -1,0 +1,13 @@
+[01m[K/home/metr4202-team15/METR4202/catkin_ws/src/metr4202_ximea_ros/ximea_color/src/ximea_color_detect.cpp:[m[K In function ‘[01m[Kint main(int, char**)[m[K’:
+[01m[K/home/metr4202-team15/METR4202/catkin_ws/src/metr4202_ximea_ros/ximea_color/src/ximea_color_detect.cpp:71:9:[m[K [01;35m[Kwarning: [m[KISO C++ forbids converting a string constant to ‘[01m[Kchar*[m[K’ [[01;35m[K-Wwrite-strings[m[K]
+   71 |         [01;35m[K"RED"[m[K,
+      |         [01;35m[K^~~~~[m[K
+[01m[K/home/metr4202-team15/METR4202/catkin_ws/src/metr4202_ximea_ros/ximea_color/src/ximea_color_detect.cpp:72:9:[m[K [01;35m[Kwarning: [m[KISO C++ forbids converting a string constant to ‘[01m[Kchar*[m[K’ [[01;35m[K-Wwrite-strings[m[K]
+   72 |         [01;35m[K"GREEN"[m[K,
+      |         [01;35m[K^~~~~~~[m[K
+[01m[K/home/metr4202-team15/METR4202/catkin_ws/src/metr4202_ximea_ros/ximea_color/src/ximea_color_detect.cpp:73:9:[m[K [01;35m[Kwarning: [m[KISO C++ forbids converting a string constant to ‘[01m[Kchar*[m[K’ [[01;35m[K-Wwrite-strings[m[K]
+   73 |         [01;35m[K"BLUE"[m[K,
+      |         [01;35m[K^~~~~~[m[K
+[01m[K/home/metr4202-team15/METR4202/catkin_ws/src/metr4202_ximea_ros/ximea_color/src/ximea_color_detect.cpp:74:9:[m[K [01;35m[Kwarning: [m[KISO C++ forbids converting a string constant to ‘[01m[Kchar*[m[K’ [[01;35m[K-Wwrite-strings[m[K]
+   74 |         [01;35m[K"YELLOW"[m[K,
+      |         [01;35m[K^~~~~~~~[m[K

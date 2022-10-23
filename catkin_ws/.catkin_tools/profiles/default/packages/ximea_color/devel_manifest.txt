@@ -1,0 +1,8 @@
+metr4202_ximea_ros/ximea_color
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_color/cmake.lock /home/metr4202-team15/METR4202/catkin_ws/devel/./cmake.lock
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_color/lib/pkgconfig/ximea_color.pc /home/metr4202-team15/METR4202/catkin_ws/devel/lib/pkgconfig/ximea_color.pc
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_color/lib/ximea_color/cmake.lock /home/metr4202-team15/METR4202/catkin_ws/devel/lib/ximea_color/cmake.lock
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_color/lib/ximea_color/ximea_color_detect /home/metr4202-team15/METR4202/catkin_ws/devel/lib/ximea_color/ximea_color_detect
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_color/lib/ximea_color/example_camera.py /home/metr4202-team15/METR4202/catkin_ws/devel/lib/ximea_color/example_camera.py
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_color/share/ximea_color/cmake/ximea_colorConfig.cmake /home/metr4202-team15/METR4202/catkin_ws/devel/share/ximea_color/cmake/ximea_colorConfig.cmake
+/home/metr4202-team15/METR4202/catkin_ws/devel/.private/ximea_color/share/ximea_color/cmake/ximea_colorConfig-version.cmake /home/metr4202-team15/METR4202/catkin_ws/devel/share/ximea_color/cmake/ximea_colorConfig-version.cmake
