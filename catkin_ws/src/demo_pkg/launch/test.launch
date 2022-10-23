@@ -1,0 +1,37 @@
+<launch>
+
+    <!-- Launches the dynamixel interface-->
+    <include 
+        file="$(find dynamixel_interface)/dynamixel_interface_controller.launch"
+    />
+
+    <!-- Starts pigpio-->
+    <param name"pigpiod" command="sudo pigpiod"
+    />
+
+    <!-- Disable USB memory limits -->
+    <param name="USB_mem_sizing" command="sudo tee /sys/module/usbcore/parameters/usbfs_memory_mb"
+    />
+
+    <!-- Runs ximea ROS camera node-->
+    <node pkg="ximea_ros" name="start_camera" type="ximea_demo" 
+    />
+
+    <!-- Launch aruco tag detection library-->
+    <include
+        file="$(find ximea_ros)/ximea_aruco.launch"
+    />
+
+    <!-- Looking at output-->
+    <node pkg="rqt_image_view" name="aruco_detect" type="rqt_image_view"
+    />
+
+    <!-- Runs inverse kinematics node-->
+    <node pkg="inverse_kinematics_pkg" name="inverse_kinematics" type="inverse_kinematics.py"
+    />
+
+    <!-- Runs logic node-->
+    <node pkg="logic_pkg" name="logic" type="logictest.py"
+    />
+
+</launch>
