@@ -1,40 +1,40 @@
 # METR4202 REPO
 
 ## Dependencies
--fiducial_msgs
+* fiducial_msgs
 
--geometry_msgs
+* geometry_msgs
 
--rospy
+* rospy
 
--sensor_msgs
+* sensor_msgs
 
--std_msgs
+* std_msgs
 
 ## Steps to run
 Open terminal
-'''
-cd METR4202/catkin_ws
 
-git checkout main
+    cd METR4202/catkin_ws
 
-git pull
+    git checkout main
 
-catkin build
+    git pull
 
-source devel/setup.bash
+    catkin build
 
-usb
-'''
+    source devel/setup.bash
+
+    usb
+
 ### For stationary pickup
-'''
-roslaunch demo_pkg stationary.launch
-'''
+
+    roslaunch demo_pkg stationary.launch
+
 ### For moving pickup
-'''
-roslaunch demo_pkg moving.launch
-'''
+
+    roslaunch demo_pkg moving.launch
+
 ### For throwing the block
-'''
-roslaunch demo_pkg yeet.launch
-'''
+
+    roslaunch demo_pkg yeet.launch
+
