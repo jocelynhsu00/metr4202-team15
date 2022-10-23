@@ -20,17 +20,16 @@ from geometry_msgs.msg import Pose
 # Drop off zone positions
 centre_x = 0
 centre_y = 0
-yeet_x = 200
-yeet_z = 100
-yeet_x_throw = -200
-yeet_z_throw = -100
+red_x = -41
+red_z = -140
+green_x = -140
+green_z = -50
+yellow_x = -140
+yellow_z = 50
+blue_x = -41
+blue_z = 140
 
-yeet_blue = -16.3
-yeet_green = 30
-yeet_yellow = -30
-yeet_red = 16.3
-
-#list length for x and z stop. 
+# List length for x and z position collection
 x_z_list_length = 5
 
 
@@ -51,7 +50,7 @@ getting_colour = False
 getting_pos = False
 
 # Camera transform
-# setting specific height for z to avoid inaccurate values from camera
+# Setting specific height for z to avoid inaccurate values from camera
 Mcr = np.array([[0,1,0,0],
                 [0,0,-1,0],
                 [-1,0,0,0],
@@ -67,7 +66,7 @@ def grip_close():
         None
 
     Returns:
-        (int): 0 for success
+        None
     """
     rpi.set_servo_pulsewidth(18, 1000)
     return 0
@@ -80,7 +79,7 @@ def grip_open():
         None
 
     Returns:
-        (int): 0 for success
+        None
     """
     rpi.set_servo_pulsewidth(18, 2000)
     return 0   
@@ -93,7 +92,7 @@ def grip_block():
         None
 
     Returns:
-        (int): 0 for success
+        None
     """
     rpi.set_servo_pulsewidth(18, 1300)
     return 0
@@ -104,7 +103,7 @@ def get_colour(data):
     Get colour based on camera input
 
     Parameters:
-        data(String): camera output string
+        data(String): colour string
 
     Returns:
         None
@@ -122,23 +121,21 @@ def transform(x, y, z):
     Frame transform
 
     Parameters:
-        x(int): x value
-        y(int): y value
-        z(int): z value
+        x(int): the x value from the camera frame
+        y(int): the y value from the camera frame
+        z(int): the z value from the camera frame
 
     Returns:
-        (int, int, int): x, y, z transformed
+        (int, int, int): the transformed x, y, z to the robot frame
     """
-    #get point in robot frame and convert to mm from m
+    # Get point, convert from m to mm
     Pc = np.array([x,y,z,1])
     Pr = np.dot(np.linalg.inv(Mcr),Pc)
-    #also multiply by scaling factor because camera sucks
+    # Scaling factor
     robot_frame_x = (Pr[0] * 1000) * 30/140
-    #robot_frame_y = Pr[1] * 100
-    #block centre will always be 16mm off the ground and camera height finding is very poor
+    # Tested with ikin 36 is the correct height to grab block given extended gripper
     robot_frame_y = 36
-    robot_frame_z = (Pr[2] * 1000) * 30/140         #was 30/140, changed to mess around a bit
-    #robot_frame_theta = 
+    robot_frame_z = (Pr[2] * 1000) * 30/140 
 
     return robot_frame_x, robot_frame_y, robot_frame_z 
 
@@ -169,7 +166,7 @@ def get_gripper_pos(data: String):
     Subscribes to gripper_pos topic to determine if 90 or 0 is used
 
     Parameters:
-        data(String): the gripper position
+        data(String): the string given from the gripper pos topic subscriber
 
     Returns:
         None
@@ -179,7 +176,6 @@ def get_gripper_pos(data: String):
     gripper_pos= int(gripper_pos_list[1])
     selected_block.set_gripper_pos(gripper_pos)
     
-
 
 class Block:
     """
@@ -225,7 +221,7 @@ class Block:
         Parameters:
             None
 
-        Returns:
+        Returns;
             (int): block id
         """
         return self.block_id
@@ -240,26 +236,24 @@ class Block:
             z: The z position of the centre of the block
         
         Returns:
-            (int): 0 for success
+            None
         """
         self.x = x
         self.y = y
         self.z = z 
         self.theta = self.get_theta()
         self.r = np.sqrt((self.x-centre_x)**2+(self.y-centre_y)**2)
-        print("Updating position")
-        print(self.get_block_id())
         return 0
     
     def set_gripper_pos(self, gripper_pos):
         """
-        Sets the gripper position
+        Set the gripper position based on i kin publisher
         
         Parameters:
-            gripper_pos(int): the gripper position
-        
+            gripper_pos(int): 0, 90 or -1
+            
         Returns:
-            (int): the gripper position
+            None
         """
         self.gripper_pos = gripper_pos
 
@@ -269,8 +263,9 @@ class Block:
         
         Parameters:
             None
+            
         Returns:
-            (int): the gripper position
+            (int): gripper position
         """
         return self.gripper_pos
 
@@ -280,9 +275,9 @@ class Block:
 
         Parameters:
             None
-        
+
         Returns:
-            (int, int, int): x, y, z position
+            (int, int, int): x, y, z
         """
         return self.x, self.y, self.z
     
@@ -317,7 +312,7 @@ class Block:
 
         Parameters:
             None
-        
+
         Returns:
             (int): omega
         """
@@ -336,7 +331,7 @@ class Block:
             None
 
         Returns:
-            (int, int): x and y position
+            (int, int): x, y
         """
         pred_theta = self.theta+self.omega*3
         pred_y = np.arcsin(pred_theta)*self.r
@@ -349,14 +344,15 @@ class Block:
         Calculate the block distance
 
         Parameters:
-            b1(Block): first block
-            b2(Block): second block
+            b1(Block): block object
+            b2(Block): block object
 
         Returns:
-            (int): distance
+            (int): distance between 2 blocks
         """
         d = np.sqrt((b1.x-b2.x)**2+(b1.y-b2.y)**2)
         return(d)
+
 
     def grab_block(self):
         """
@@ -371,34 +367,34 @@ class Block:
         # Open gripper
         grip_open()
 
-        # Move to block pos
+        # Send end effector position to inv kin
         rospy.loginfo('Grab box')
         pose = Pose()
         pose.position.x = self.x
-        #pose.position.y = 100
         pose.position.z = self.z
-
         wait_time = 4 
         self.y = 51
 
-        # Move closer to block
+        # Move to position
         pose.position.y = self.y
-
         self.pub.publish(pose)
+
+        # Give robot time to move to pose
         time.sleep(1.5)
 
-        # Update based on gripper position
+        # Check gripper orientation
         if self.get_gripper_pos() == 90:
             pose.position.y = 36
             self.pub.publish(pose)
             time.sleep(0.5)
         
-        # Grip the block
+        # Close gripper
         grip_block()
         
+
         # Move up with block
         pose.position.y = self.y + 100
-        #start at ready pos 
+        # Send to i kin
         self.pub.publish(pose)
         time.sleep(0.5)
 
@@ -407,24 +403,27 @@ class Block:
         Sets the color of the block
 
         Parameters:
-            colour(string): the colour to set the block
+            colour(string): the string containing the colour
 
         Returns:
             None
         """
         global getting_colour
+        # Split the string
         colour = str(colour).split('"')
+
+        # Didnt get valid colour
         if len(colour) < 2:
-            print('waiting')
+            rospy.loginfo('Waiting')
         else:
             getting_colour = False
-            print(colour)
             colour = colour[1]
+            # Update colour
             self.colour = str(colour)
 
-    def yeet_box(self):
+    def dropoff_box(self):
         """
-        Throws a block based on colour
+        Drops of block based on colour
 
         Parameters:
             None
@@ -432,70 +431,59 @@ class Block:
         Returns:
             None
         """
-
-        msg = JointState(
-        # Set header with current time
-        header=Header(stamp=rospy.Time.now()),
-        # Specify joint names (see `controller_config.yaml` under `dynamixel_interface/config`)
-        name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
-            )
-
         # Create a pose object
         # Set pose based on colour
-        theta_1 = 0
         pose = Pose()
-
         if self.colour == 'red':
-            theta_1 = yeet_red
+            pose.position.x = red_x
+            pose.position.z = red_z
 
         elif self.colour == 'green':
-            theta_1 = yeet_green
+            pose.position.x = green_x
+            pose.position.z = green_z
 
         elif self.colour == 'yellow':
-            theta_1 = yeet_yellow
+            pose.position.x = yellow_x
+            pose.position.z = yellow_z
 
         elif self.colour == 'blue':
-            theta_1 = yeet_blue
+            pose.position.x = blue_x
+            pose.position.z = blue_z
+
         else:
             return(1)
+        
+        # Move to dropoff position
+        pose.position.y = 36
 
-        # Prepares to throw
+        self.pub.publish(pose)
+        time.sleep(1.3)
 
-        theta_list_mid = [np.deg2rad(theta_1), np.deg2rad(-90), 0, 0]
-        msg.position = theta_list_mid
-        msg.velocity = [3.0, 3.0, 3.0, 3.0]
-        show_cam_pub.publish(msg)
-        time.sleep(3)
-
-        # Throw block and release gripper
-        theta_list_mid = [np.deg2rad(theta_1), np.deg2rad(-45), np.deg2rad(45), np.deg2rad(-45)]
-        msg.position = theta_list_mid
-        msg.velocity = [3.0, 3.0, 3.0, 3.0]
-        show_cam_pub.publish(msg)
-        time.sleep(0.3)
+        # Drop off block
         grip_open()
-        time.sleep(3)
-    
+        time.sleep(0.3)
+
     def set_stationary(self, stationary: bool):
         """
-        Set if block is stationary
+        Set if the block is stationary
         
         Parameters:
-            stationary(bool): True if the block is stationary
+            stationary(bool): True if block is stationary, False if not
             
-        Reuturns:
-            None"""
+        Returns:
+            None
+        """
         self.is_stationary = stationary
 
     def get_stationary(self):
         """
         Get if the block is stationary
         
-        Parameters:
+        Parameters;
             None
             
         Returns:
-            (bool): True if stationary
+            (bool): True if the block is stationary, False if its not
         """
         return self.is_stationary
 
@@ -504,18 +492,14 @@ def get_camera_list(data : String):
     Get camera information from camera publisher
 
     Parameters:
-        data(string): the information from camera publisher
-
-    Returns:
-        (int): 1 if fail
+        data(String): the string from the camera publisher
     """
     global getting_pos
     if getting_pos != True:
         return 1
 
     global block_list
-
-    # Split input
+    # Split the string
     camera_list_string = str(data).split('"')
     camera_list_string = str(camera_list_string[1])
     camera_list_string = str(camera_list_string).split(',')
@@ -524,28 +508,29 @@ def get_camera_list(data : String):
     # Update camera list
     for i in camera_list_string:
         camera_list.append(float(i))
-
     curr_id = camera_list[0]
-    match = False
 
-    # Check for id match
+    # Check for match
+    match = False
     curr_block = None
 
-    # If the block id matches, set as current block
+    # Check for match in block list
     for b in block_list :
         block_id = b.get_block_id()
+
+        # Get the current block if id matches
         if block_id == curr_id:
             match = True
             curr_block = b
 
-    # Update position if block id exists
     if match:
+        # Transform the data
         pos = transform(camera_list[1], camera_list[2], camera_list[3])
         x = pos[0]
         y = pos[1]
         z = pos[2]
 
-        # Get 5 positions of x and z to compare
+        # Check the block position 5 times to determine if it is stationary
         if len(curr_block.xlist) >= x_z_list_length:
             curr_block.xlist.remove(curr_block.xlist[0])
         curr_block.xlist.append(x)
@@ -554,15 +539,12 @@ def get_camera_list(data : String):
             curr_block.zlist.remove(curr_block.zlist[0])
         curr_block.zlist.append(z)
 
-
-        # Check stationary
+        # Checks if the blocks are stationary
         if len(curr_block.xlist) >= x_z_list_length:
             x_diff = sum(curr_block.xlist)/x_z_list_length
             z_diff = sum(curr_block.zlist)/x_z_list_length
 
-
-
-        # Check that movement is greater than expected error
+        # Checks to make sure the distance difference is outside of expected error
             error_diff = 1.02
             if abs(x) <= abs(x_diff) * error_diff:
                 print('no difference in x')
@@ -574,12 +556,13 @@ def get_camera_list(data : String):
             else:
                 curr_block.set_stationary(False)
 
-        # Update the position
+        # Update block position
         curr_block.update_pos(x, y, z)
+        rospy.loginfo("Updating block position")
 
     else:
         rospy.loginfo("else")
-        # Transform frame
+        # Need to transform frame first
         pos = transform(camera_list[1], camera_list[2], camera_list[3])
         x = pos[0]
         y = pos[1]
@@ -589,6 +572,7 @@ def get_camera_list(data : String):
         block_list.append(curr_block)
         curr_block.listx = [x]
         curr_block.listz = [z]
+        rospy.loginfo("created new block")
 
 def main():
     """
@@ -647,87 +631,105 @@ def main():
     while(1):
         print("STARTING STATE MACHINE")
 
-        # DECISION STATE
+        # DETECTION STATE
         if curr_state == 0:
             print('State 0')
+            # Check how many times robot has reset
             if loop_state_1 == 0:
                 loop_state_1 = 1
                 reset()
                 time.sleep(0.5)
 
             else:
+                # Keep looking for block position
                 getting_pos = True
-                print(block_list)
+                # If block list is empty, wait for a new block
                 if block_list == []:
                     continue
-                print('State 0')
                 selected_block = block_list[0]
-
-                # Move onto next state if block is stationary
+                # Move onto grab block if the block is stationary
                 if selected_block.get_stationary():
                     curr_state += 1 
 
-                    
         # GRAB BLOCK STATE
         if curr_state == 1:
             print("State 1")
+
+            # Do not update position while grabbing block
             getting_pos = False
             if selected_block == 0:
+                print("ERROR: state == 0")
                 curr_state = 0
                 loop_state_1 = 0
                 break
 
-            # Check if block can be picked up
+            # Check if blocks are too close together
             for index, block in enumerate(block_list):
                 too_close = False
                 for i, b in enumerate(block_list):
                     if i == index:
                         continue
+                    # Check distance between blocks
                     distance = np.sqrt(block.r**2+b.r**2-2*block.r*b.r*np.cos(np.abs(block.theta-b.theta)))
+
+                    # Confirm is distance is big enough to grab block
                     if distance <= 40 and np.abs(block.r-b.r) <= 32:
                         too_close = True
+                
+                # Grab the closest valid block
                 if block.r < selected_block.r and too_close == False:
                     selected_block = block
 
-            # Grab the block and move onto next state
+            # Grab block and move onto next state
             selected_block.grab_block()
             curr_state += 1
 
-        # PREPARE FOR YEET STATE
+        # CHECK COLOUR STATE
         if curr_state == 2:
             print("State 2")
             getting_pos = False
-
-            msg = JointState(
-            # Set header with current time
-            header=Header(stamp=rospy.Time.now()),
-            # Specify joint names (see `controller_config.yaml` under `dynamixel_interface/config`)
-            name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
-                )
             
+            # Create msg
+            msg = JointState(
+                # Set header with current time
+                header=Header(stamp=rospy.Time.now()),
+                name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
+            )
+
+            # Set a middle pose to avoid collision
             theta_list_mid = [0, 0, np.deg2rad(-66), np.deg2rad(10)]
             msg.position = theta_list_mid
             show_cam_pub.publish(msg)
-            #time.sleep(2)
+
+            # Move to show camera position
             theta_list = [0, np.deg2rad(-35), np.deg2rad(-55), np.deg2rad(-100)]
             msg.position = theta_list
-
             show_cam_pub.publish(msg)
+
+            # Wait for robot to get into pose
             time.sleep(1.5)
+
+            # Check colour
             getting_colour = True
             time.sleep(0.1)
-            getting_colour = False
-            selected_block.yeet_box()
+
+            # Move onto next state            
             curr_state += 1 
 
 
-        # YEET STATE
+        # DROPOFF BLOCK STATE
         if curr_state == 3 :
-            getting_pos = False
             print("state 3")
+            # Dont get new position while dropping off block
+            getting_pos = False
             
+            # Drop off the block
+            selected_block.dropoff_box()
+
+            # Remove the block from the list of blocks on the carousel
             block_list.remove(selected_block)
 
+            # Move back to state 0
             loop_state_1 = 0
             curr_state = 0
 
