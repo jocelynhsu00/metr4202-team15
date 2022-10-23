@@ -401,13 +401,15 @@ class Block:
 
         theta_list_mid = [np.deg2rad(theta_1), np.deg2rad(-90), 0, 0]
         msg.position = theta_list_mid
+        msg.velocity = [3.0, 3.0, 3.0, 3.0]
         show_cam_pub.publish(msg)
         time.sleep(3)
 
-        theta_list_mid = [np.deg2rad(-30), np.deg2rad(-45), np.deg2rad(45), 0]
+        theta_list_mid = [np.deg2rad(theta_1), np.deg2rad(-45), np.deg2rad(45), np.deg2rad(-45)]
         msg.position = theta_list_mid
+        msg.velocity = [3.0, 3.0, 3.0, 3.0]
         show_cam_pub.publish(msg)
-        time.sleep(0.4)
+        time.sleep(0.3)
         grip_open()
         time.sleep(3)
     def set_stationary(self, stationary: bool):
