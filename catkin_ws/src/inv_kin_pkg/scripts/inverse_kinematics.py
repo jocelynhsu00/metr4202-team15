@@ -221,7 +221,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
         deg.append(np.rad2deg(theta))
     print(deg)
     rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
-    msg.velocity = 2.0
+    msg.velocity = [3.0, 3.0, 3.0, 3.0]
     pub_pose.publish(msg)
     pub_gripper_pos.publish(str(gripper_pos))
 
