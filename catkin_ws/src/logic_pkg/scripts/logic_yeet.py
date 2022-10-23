@@ -539,7 +539,7 @@ def main():
     global getting_pos
 
     
-    loopstate1 = 0
+    loop_state_1 = 0
     curr_state = 0
 
     # Initialise node
@@ -588,8 +588,8 @@ def main():
         if curr_state == 0:
             # Determine if block has been detected
             print('State 0')
-            if loopstate1 == 0:
-                loopstate1 = 1
+            if loop_state_1 == 0:
+                loop_state_1 = 1
                 reset()
                 time.sleep(0.5)
 
@@ -613,7 +613,7 @@ def main():
             if selected_block == 0:
                 print("ERROR: state == 0")
                 curr_state = 0
-                loopstate1 = 0
+                loop_state_1 = 0
                 
                 break
             for index, block in enumerate(block_list):
@@ -676,7 +676,7 @@ def main():
             # selected_block.dropoff_box()
             block_list.remove(selected_block)
 
-            loopstate1 = 0
+            loop_state_1 = 0
             curr_state = 0
             grip_open()
 
