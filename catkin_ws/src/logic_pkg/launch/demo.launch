@@ -1,6 +1,0 @@
-<launch>
-
-<!-- Joint State Publisher (Inverse Kinematics) -->
-<node name="desired_joint_states" pkg="inverse_kinematics_pkg" type="inverse_kinematics" />
-
-</launch>

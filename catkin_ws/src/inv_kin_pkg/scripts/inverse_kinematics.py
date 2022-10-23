@@ -6,17 +6,21 @@ Inverse kinematics
 # Always need this
 import rospy
 import math
+import time
 
 import numpy as np
 
 # Import message types
-from std_msgs.msg import Header
+from std_msgs.msg import Header, Int16
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Pose
 
 def inverse_kinematics(pose: Pose) -> JointState:
-    global pub 
+    # Setup
+    global pub_pose 
+    pub_gripper_pos
     success = 0
+    gripper_pos = -1
     # INVERSE KINEMATICS
 
     # Create message of type JointState
@@ -33,12 +37,22 @@ def inverse_kinematics(pose: Pose) -> JointState:
     l3 = 95 
     l4 = 85 
 
+    total_height = l1 + l2 + l3 + l4
+
     # End eff posiiton
     x_end = pose.position.x 
     x_end_abs = abs(pose.position.x)
     y_end = pose.position.y- l1
     z_end = pose.position.z 
     print(x_end_abs, y_end, z_end)
+
+    if z_end < 0:
+        z_end -= 10
+
+    dist_from_centre = np.sqrt(x_end **2 + z_end **2)
+
+    print(y_end)
+
 
     # Check reachable within workspace
     # Gripper at 90 deg
@@ -53,10 +67,10 @@ def inverse_kinematics(pose: Pose) -> JointState:
 
     gripper_0_valid = False
 
-    if x_end_abs < max_length_gripper_0:
+    if dist_from_centre < max_length_gripper_0:
         gripper_0_valid = True
 
-    if x_end_abs < max_length_gripper_90:
+    if dist_from_centre < max_length_gripper_90:
         gripper_90_valid = True
 
     print("Check max:", gripper_90_valid, gripper_0_valid)
@@ -64,23 +78,24 @@ def inverse_kinematics(pose: Pose) -> JointState:
     all_valid = None
 
     theta_list = None
-
-    # Try gripper 90 deg sln first
+     # Try gripper 90 deg sln first
     if gripper_90_valid:
-        # Prevent self collision and hitting ground
-        if x_end_abs > 100 and y_end > -50:
+        if (x_end > 80 or x_end < -40) and (y_end > -40 or y_end > total_height):
             print("Passed floor collision and env collision check")
             psi = np.pi/2
 
             # Find pos at dynamixel 4
-            x_4 = x_end_abs
+            x_4 = x_end_abs + 25
             y_4 = y_end + l4
             z_4 = z_end
 
+            dist_from_centre_4 = np.sqrt(x_4**2 + z_4**2)
+
+
             # Elbow up
-            c_theta_3 = (x_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
+            c_theta_3 = (dist_from_centre_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
             theta_3 = np.arctan2(-np.sqrt(1-c_theta_3), c_theta_3)
-            theta_2 = np.arctan2(y_4, x_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
+            theta_2 = np.arctan2(y_4, dist_from_centre_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
             theta_4 = -psi - theta_2 - theta_3
             theta_1 = np.arctan(z_4/x_4)
 
@@ -102,12 +117,15 @@ def inverse_kinematics(pose: Pose) -> JointState:
                 theta_4 = -theta_4
                 theta_3 = -theta_3
                 theta_2 = -theta_2
+                theta_1 = -theta_1
 
 
             theta_list  = [theta_1, theta_2, theta_3, theta_4]
+            # print("90 deg test", np.rad2deg(theta_list))
             # Check limits
             all_valid = True
             for index, theta in enumerate(theta_list):
+                print("90 deg theta:", index, np.rad2deg(theta))
                 # Check dynamixel limits (want to avoid going over -90, 90 deg as it damages the wiring)
                 if index != 3:
                     if theta < -np.deg2rad(140) or theta > np.deg2rad(140) or math.isnan(theta):
@@ -120,28 +138,35 @@ def inverse_kinematics(pose: Pose) -> JointState:
             
             if all_valid:
                 msg.position = theta_list
+                gripper_pos = 90
 
     # Try gripper 0 pos
     if (all_valid is None or all_valid is False) and gripper_0_valid:
-        if x_end_abs > 100 and y_end > -20:
+        if (x_end > 80 or x_end < -40) and (y_end > -25 or y_end > total_height):
             print("Passed floor collision and env collision check")
             print("Trying 0")
             # Try gripper 0 position
             psi = 0
 
             # Find pos at dynamixel 4
-            x_4 = x_end_abs - l4
+            # x_4 = x_end_abs - l4 - 26
             y_4 = y_end
-            z_4 = z_end
+            # z_4 = z_end
+
+            theta = np.arctan(z_end/x_end_abs)
+            x_4 = x_end_abs - l4 * np.cos(theta) - 20*np.cos(theta)
+            z_4 = z_end - l4 * np.sin(theta) - 20*np.sin(theta)
+
+            dist_from_centre_4 = np.sqrt(x_4**2 + z_4**2)
 
             # Elbow up
-            c_theta_3 = (x_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
+            c_theta_3 = (dist_from_centre_4**2+y_4**2-l2**2-l3**2)/(2*l2*l3)
             # IF x is negative, elbow up is +ve sln rather than negative
             if x_4 < 0:
                 theta_3 = np.arctan2(np.sqrt(1-c_theta_3), c_theta_3)
             elif x_4 > 0:
                 theta_3 = np.arctan2(-np.sqrt(1-c_theta_3), c_theta_3)
-            theta_2 = np.arctan2(y_4, x_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
+            theta_2 = np.arctan2(y_4, dist_from_centre_4) - np.arctan2(l3*np.sin(theta_3), l2 + l3*np.cos(theta_3))
             theta_4 = -psi - theta_2 - theta_3
             theta_1 = np.arctan(z_4/x_4)
 
@@ -163,6 +188,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
                 theta_4 = -theta_4
                 theta_3 = -theta_3
                 theta_2 = -theta_2
+                theta_1 = -theta_1
 
             theta_list  = [theta_1, theta_2, theta_3, theta_4]
             # Check limits
@@ -184,9 +210,10 @@ def inverse_kinematics(pose: Pose) -> JointState:
             
             if all_valid:
                 msg.position = theta_list
+                gripper_pos = 0
 
     if theta_list is None:
-        theta_list = [0, 0, - np.pi/2, np.pi/2]
+        theta_list = [0, np.deg2rad(40), np.deg2rad(-66), np.deg2rad(10)]
         msg.position = theta_list
         success = 1
     deg = []
@@ -194,17 +221,25 @@ def inverse_kinematics(pose: Pose) -> JointState:
         deg.append(np.rad2deg(theta))
     print(deg)
     rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
-    pub.publish(msg)
+    pub_pose.publish(msg)
+    pub_gripper_pos.publish(gripper_pos)
 
     return success
 
 
 def main():
-    global pub
+    global pub_pose
+    global pub_gripper_pos
     # Create publisher
-    pub = rospy.Publisher(
+    pub_pose = rospy.Publisher(
         'desired_joint_states', # Topic name
         JointState, # Message type
+        queue_size=10 # Topic size (optional)
+    )
+
+    pub_gripper_pos = rospy.Publisher(
+        'gripper_pos', # Topic name
+        Int16, # Message type
         queue_size=10 # Topic size (optional)
     )
 
