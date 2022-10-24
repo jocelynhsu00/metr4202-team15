@@ -584,20 +584,12 @@ def get_camera_list(data : String):
             curr_block.tlist.remove(curr_block.tlist[0])
         curr_block.tlist.append(t)
 
-        # Checks if the blocks are stationary
-        # if len(curr_block.xlist) >= x_z_list_length:
-        #     x_diff = sum(curr_block.xlist)/x_z_list_length
-        #     z_diff = sum(curr_block.zlist)/x_z_list_length
-
         # Checks to make sure the distance difference is outside of expected error
         error_diff = 1.02
         if 180 < curr_block.get_theta() < 360:
             curr_block.set_dont_get(True)
         else:
             curr_block.set_dont_get(False)
-
-
-
 
         # Update block position
         curr_block.update_pos(x, y, z)
