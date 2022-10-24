@@ -701,27 +701,6 @@ def main():
                 curr_state = 0
                 loop_state_1 = 0
                 break
-
-            # Check if blocks are too close together
-            # for index, block in enumerate(block_list):
-            #     too_close = False
-            #     for i, b in enumerate(block_list):
-            #         if i == index:
-            #             continue
-            #         # Check distance between blocks
-            #         distance = np.sqrt(block.r**2+b.r**2-2*block.r*b.r*np.cos(np.abs(block.theta-b.theta)))
-
-            #         # Confirm is distance is big enough to grab block
-            #         if distance <= 40 and np.abs(block.r-b.r) <= 32:
-            #             too_close = True
-                
-            #     # Grab the closest valid block
-            #     if block.r < selected_block.r and too_close == False:
-            #         selected_block = block
-            
-
-            #Iterate to find block closest to 90 degrees
-
     
             # Grab block and move onto next state
             if selected_block.get_dont_get() == True:
