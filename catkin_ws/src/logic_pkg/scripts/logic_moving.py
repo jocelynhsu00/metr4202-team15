@@ -272,13 +272,30 @@ class Block:
         return self.gripper_pos
 
     def get_dont_get(self):
+        """
+        Do not try to pickup block
+        
+        Parameters:
+            None
+            
+        Returns:
+            (bool): True if the block should not be picked up
+        """
         
         return self.dont_get
 
 
     def set_dont_get(self, statement: bool):
+        """
+        Tries to pickup block
+        
+        Parameters:
+            statement(bool): True or False for get block or dont get block
+            
+        Returns:
+            None
+        """
         self.dont_get = statement
-
 
 
     def get_pos(self):
